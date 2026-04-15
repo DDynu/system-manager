@@ -1,5 +1,1 @@
-- [Dashboard Design](dashboard-design.md) - Complete dashboard implementation
-- [Backend API Design](backend-api-design.md) - API design and implementation plan
-- [Backend Implementation](backend-implementation.md) - Python + FastAPI backend
-- [Architecture](architecture.md) - Split metrics and power servers
-- [Frontend Implementation](../frontend/plans/frontend-implementation.md) - React dashboard
+- [Complete Implementation](IMPLEMENTATION.md) - All plans consolidated
