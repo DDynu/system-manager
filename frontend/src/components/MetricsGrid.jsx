@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, React } from 'react';
 import {
   AreaChart,
   Area,
@@ -9,7 +9,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const API_URL = 'http://localhost:8000/api';
+const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
@@ -37,7 +37,7 @@ export default function MetricsGrid() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const metricsRes = await fetch(`${API_URL}/metrics`);
+        const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
         const metricsData = await metricsRes.json();
         setMetrics(metricsData);
         const timeLabel = new Date().toLocaleTimeString();
@@ -56,7 +56,7 @@ export default function MetricsGrid() {
 
     const fetchStatus = async () => {
       try {
-        const statusRes = await fetch(`${API_URL}/status`);
+        const statusRes = await fetch(`${METRICS_API_URL}/status`);
         const statusData = await statusRes.json();
         setPcStatus(statusData);
       } catch (err) {
