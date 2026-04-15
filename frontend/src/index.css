@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double&display=swap');
+@import "tailwindcss";
+
+:root {
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #1f2937;
+  --border: #4b5563;
+  --code-bg: #111827;
+  --accent: #a855f7;
+  --accent-bg: rgba(168, 85, 247, 0.2);
+  --accent-border: rgba(168, 85, 247, 0.8);
+  --social-bg: rgba(51, 65, 85, 0.5);
+  --shadow: rgba(0, 0, 0, 0.4) 0 8px 16px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #1f2937;
+    --border: #374151;
+    --code-bg: #111827;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.25);
+    --accent-border: rgba(192, 132, 252, 0.7);
+    --social-bg: rgba(51, 65, 85, 0.6);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 4px 6px -1px;
+  }
+
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.main-content {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-family: "Bitcount Grid Double", system-ui;
+  font-weight: 700;
+  font-size: 72px;
+  letter-spacing: -2.16px;
+  margin: 32px 0;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--text-h) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  @media (max-width: 1024px) {
+    font-size: 48px;
+    margin: 20px 0;
+  }
+}
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
