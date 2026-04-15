@@ -35,20 +35,15 @@ export default function MetricsGrid() {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMetrics = async () => {
       try {
-        const [metricsRes, statusRes] = await Promise.all([
-          fetch(`${API_URL}/metrics`),
-          fetch(`${API_URL}/status`)
-        ]);
+        const metricsRes = await fetch(`${API_URL}/metrics`);
         const metricsData = await metricsRes.json();
-        const statusData = await statusRes.json();
         setMetrics(metricsData);
-        setPcStatus(statusData);
         const timeLabel = new Date().toLocaleTimeString();
         setCpuHistory(prev => [...prev, { time: timeLabel, value: metricsData.cpu }].slice(-20));
         setMemoryHistory(prev => [...prev, { time: timeLabel, value: metricsData.memory.used }].slice(-20));
-  setMemoryTotal(metricsData.memory.total);
+        setMemoryTotal(metricsData.memory.total);
         setNetworkHistory(prev => [...prev, {
           time: timeLabel,
           rx: metricsData.network.rx,
@@ -56,17 +51,33 @@ export default function MetricsGrid() {
         }].slice(-20));
       } catch (err) {
         console.error('Failed to fetch metrics:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchData();
-    const interval = setInterval(() => {
-      fetchData();
+    const fetchStatus = async () => {
+      try {
+        const statusRes = await fetch(`${API_URL}/status`);
+        const statusData = await statusRes.json();
+        setPcStatus(statusData);
+      } catch (err) {
+        console.error('Failed to fetch status:', err);
+      }
+    };
+
+    fetchMetrics();
+    fetchStatus();
+    setLoading(false);
+
+    const metricsInterval = setInterval(fetchMetrics, 1000);
+    const statusInterval = setInterval(() => {
+      fetchStatus();
       setCurrentTime(new Date().toLocaleTimeString());
-    }, 1000);
-    return () => clearInterval(interval);
+    }, 5000);
+
+    return () => {
+      clearInterval(metricsInterval);
+      clearInterval(statusInterval);
+    };
   }, []);
 
   if (loading || !metrics) {
