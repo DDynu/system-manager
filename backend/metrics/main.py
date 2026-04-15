@@ -4,7 +4,7 @@ import platform
 from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -13,7 +13,7 @@ app = FastAPI(title="System Manager API")
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:8085", "http://192.168.100.80:8085"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
