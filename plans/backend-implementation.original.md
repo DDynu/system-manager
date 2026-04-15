@@ -1,7 +1,7 @@
 # System Manager - Backend Implementation Plan
 
 ## Context
-Frontend dashboard exists in `frontend/` folder with hardcoded mock data. Need backend API for real system metrics + power control commands (shutdown, reboot, sleep, wake).
+Frontend dashboard exists in `frontend/` folder with hardcoded mock data. Need to build backend API to provide real system metrics and handle power control commands (shutdown, reboot, sleep, wake).
 
 ## Current State
 

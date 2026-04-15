@@ -26,8 +26,8 @@ backend/
 
 ### Layout Structure
 - Single-page dashboard (no sidebar navigation)
-- Dark theme high contrast
-- Cards: 2px borders, hover accent
+- Dark theme with high contrast
+- Cards have 2px borders with hover accent effect
 
 ### Color Scheme
 ```css
@@ -46,35 +46,35 @@ backend/
 - Removed ChartsSection
 
 **src/components/Layout.jsx**
-- Header "System Manager" h1
+- Header with "System Manager" h1
 - Dark background #1a1b26
 - Single page layout
 
 **src/components/MetricsGrid.jsx**
-- PC Status card (full width, Online/Offline)
+- PC Status card (full width, shows name and Online/Offline)
 - 6 metric cards: CPU Usage, Memory, Disk, Uptime, Temperature, Network
 - Removed trend indicators (+12%, -5%, etc.)
-- 2px borders, hover effect
+- 2px borders with hover effect
 
 **src/components/PowerControls.jsx**
 - 4 buttons: Shutdown, Reboot, Sleep, Wake
-- 3D effect, bottom borders
-- Active press animation (border gone, button moves down 1px)
+- 3D effect with bottom borders
+- Active press animation (border disappears, button moves down 1px)
 
 **src/index.css**
-- Oswald font 700 weight h1
-- Gradient text (purple to white)
+- Oswald font at 700 weight for h1
+- Gradient text effect (purple to white)
 - Removed system-ui fallback
-- Font-face declarations Oswald
+- Font-face declarations for Oswald
 
 ## File Locations
 - `src/App.jsx` - Main app composition
 - `src/components/Layout.jsx` - Layout wrapper
-- `src/components/MetricsGrid.jsx` - Metrics, PC status
+- `src/components/MetricsGrid.jsx` - Metrics and PC status
 - `src/components/PowerControls.jsx` - Power buttons
-- `src/index.css` - Global styles, fonts
+- `src/index.css` - Global styles and fonts
 
 ## To Do
-- Wire PowerControls to backend API for power actions
-- Implement PC status polling/update
+- Wire PowerControls to backend API for actual power actions
+- Implement PC status polling/update mechanism
 - Add chart visualizations (optional)
