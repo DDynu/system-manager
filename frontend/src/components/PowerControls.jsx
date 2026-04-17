@@ -1,12 +1,22 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 
 const API_URL = 'http://localhost:8000/api';
 
-export default function PowerControls() {
+const PowerButton = memo(({ label, loading, onAction }) => (
+    <button
+        onClick={onAction}
+        disabled={loading}
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
+    >
+        {loading ? 'Processing...' : label}
+    </button>
+), (prev, next) => prev.loading === next.loading);
+
+function PowerControls() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleAction = async (action) => {
+  const handleAction = useCallback(async (action) => {
     if (!confirm(`Are you sure you want to ${action} this system?`)) {
       return;
     }
@@ -34,38 +44,14 @@ export default function PowerControls() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-2">
-      <button
-        onClick={() => handleAction('shutdown')}
-        disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
-      >
-        {loading ? 'Processing...' : 'Shutdown'}
-      </button>
-      <button
-        onClick={() => handleAction('reboot')}
-        disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
-      >
-        {loading ? 'Processing...' : 'Reboot'}
-      </button>
-      <button
-        onClick={() => handleAction('sleep')}
-        disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
-      >
-        {loading ? 'Processing...' : 'Sleep'}
-      </button>
-      <button
-        onClick={() => handleAction('wake')}
-        disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
-      >
-        {loading ? 'Processing...' : 'Wake'}
-      </button>
+      <PowerButton label="Shutdown" loading={loading} onAction={() => handleAction('shutdown')} />
+      <PowerButton label="Reboot" loading={loading} onAction={() => handleAction('reboot')} />
+      <PowerButton label="Sleep" loading={loading} onAction={() => handleAction('sleep')} />
+      <PowerButton label="Wake" loading={loading} onAction={() => handleAction('wake')} />
 
       {error && (
         <div className="w-full text-center text-red-400 text-sm mt-3">
@@ -75,3 +61,7 @@ export default function PowerControls() {
     </div>
   );
 }
+
+export default memo(PowerControls, (prevProps, nextProps) => {
+    return true;
+});

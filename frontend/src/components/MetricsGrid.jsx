@@ -1,4 +1,4 @@
-import { useState, useEffect, React } from 'react';
+import { useState, useEffect, React, memo } from 'react';
 import {
     AreaChart,
     Area,
@@ -11,6 +11,20 @@ import {
 import PowerControls from './PowerControls';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
+
+function areArraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i].time !== b[i].time ||
+            a[i].cpu !== b[i].cpu ||
+            a[i].memory !== b[i].memory ||
+            a[i].rx !== b[i].rx ||
+            a[i].tx !== b[i].tx) {
+            return false;
+        }
+    }
+    return true;
+}
 
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
@@ -25,37 +39,40 @@ function formatBytes(bytes) {
     return `${value.toFixed(1)} ${sizes[i]}`;
 }
 
-export default function MetricsGrid() {
-    const [metrics, setMetrics] = useState(null);
-    const [pcStatus, setPcStatus] = useState({ name: '', status: 'Offline' });
-    const [loading, setLoading] = useState(true);
-    const [backendAvailable, setBackendAvailable] = useState(false);
-    const [isFirstFetch, setIsFirstFetch] = useState(true);
-    const [cpuHistory, setCpuHistory] = useState([]);
-    const [memoryHistory, setMemoryHistory] = useState([]);
-    const [networkHistory, setNetworkHistory] = useState([]);
-    const [memoryTotal, setMemoryTotal] = useState(0);
-    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+function MetricsGrid() {
+    const [data, setData] = useState({
+        metrics: null,
+        history: [],
+        memoryTotal: 0,
+        pcStatus: { name: '', status: 'Offline' },
+        backendAvailable: false,
+        loading: true,
+        isFirstFetch: true,
+        currentTime: new Date().toLocaleTimeString()
+    });
 
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
-                setMetrics(metricsData);
-                setBackendAvailable(true);
                 const timeLabel = new Date().toLocaleTimeString();
-                setCpuHistory(prev => [...prev, { time: timeLabel, value: metricsData.cpu }].slice(-20));
-                setMemoryHistory(prev => [...prev, { time: timeLabel, value: metricsData.memory.used }].slice(-20));
-                setMemoryTotal(metricsData.memory.total);
-                setNetworkHistory(prev => [...prev, {
-                    time: timeLabel,
-                    rx: metricsData.network.rx,
-                    tx: metricsData.network.tx
-                }].slice(-20));
+                setData(prev => ({
+                    ...prev,
+                    metrics: metricsData,
+                    memoryTotal: metricsData.memory.total,
+                    history: [...prev.history, {
+                        time: timeLabel,
+                        cpu: metricsData.cpu,
+                        memory: metricsData.memory.used,
+                        rx: metricsData.network.rx,
+                        tx: metricsData.network.tx
+                    }].slice(-20),
+                    backendAvailable: true
+                }));
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
-                setBackendAvailable(false);
+                setData(prev => ({ ...prev, backendAvailable: false }));
             }
         };
 
@@ -63,12 +80,10 @@ export default function MetricsGrid() {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
-                setPcStatus(statusData);
-                setBackendAvailable(true);
+                setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setBackendAvailable(false);
-                setPcStatus({ name: '', status: 'Offline' });
+                setData(prev => ({ ...prev, pcStatus: { name: '', status: 'Offline' }, backendAvailable: false }));
             }
         };
 
@@ -76,46 +91,46 @@ export default function MetricsGrid() {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
-                setPcStatus(statusData);
+                setData(prev => ({ ...prev, pcStatus: statusData }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setPcStatus({ name: '', status: 'Offline' });
+                setData(prev => ({ ...prev, pcStatus: { name: '', status: 'Offline' } }));
             }
         };
 
         fetchMetrics();
         fetchStatus();
-        setLoading(false);
+        setData(prev => ({ ...prev, loading: false }));
 
         const metricsInterval = setInterval(fetchMetrics, 5000);
         const statusInterval = setInterval(() => {
-            if (!backendAvailable) {
+            if (!data.backendAvailable) {
                 fetchStatusOnly();
             } else {
                 fetchStatus();
             }
-            setCurrentTime(new Date().toLocaleTimeString());
+            setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
         }, 10000);
 
         return () => {
             clearInterval(metricsInterval);
             clearInterval(statusInterval);
         };
-    }, [backendAvailable]);
+    }, []);
 
     useEffect(() => {
-        if (metrics !== null) {
-            setIsFirstFetch(false);
+        if (data.metrics !== null) {
+            setData(prev => ({ ...prev, isFirstFetch: false }));
         }
-    }, [metrics]);
+    }, [data.metrics]);
 
     useEffect(() => {
-        if (pcStatus && pcStatus.status !== 'Offline') {
-            setIsFirstFetch(false);
+        if (data.pcStatus && data.pcStatus.status !== 'Offline') {
+            setData(prev => ({ ...prev, isFirstFetch: false }));
         }
-    }, [pcStatus]);
+    }, [data.pcStatus]);
 
-    if (loading || !metrics) {
+    if (data.loading || !data.metrics) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {/* PC Status Placeholder */}
@@ -140,7 +155,7 @@ export default function MetricsGrid() {
         );
     }
 
-    if (!backendAvailable && !isFirstFetch) {
+    if (!data.backendAvailable && !data.isFirstFetch) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div className="bg-[var(--bg)] border-2 border-red-500 rounded-xl p-6 lg:col-span-3 flex items-center justify-center">
@@ -153,7 +168,7 @@ export default function MetricsGrid() {
         );
     }
 
-    const statusColor = backendAvailable && pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
+    const statusColor = data.backendAvailable && data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -163,16 +178,16 @@ export default function MetricsGrid() {
             >
                 <div className="text-center">
                     <div className="text-3xl font-bold text-[var(--text-h)] mb-1">
-                        {pcStatus.hostname || 'Unknown'}
+                        {data.pcStatus.hostname || 'Unknown'}
                     </div>
                     <div className={`text-lg font-semibold ${statusColor}`}>
-                        {pcStatus.status}
+                        {data.pcStatus.status}
                     </div>
                     <div className="text-sm text-[var(--text)] mt-2">
-                        {currentTime}
+                        {data.currentTime}
                     </div>
                     <div className="text-sm text-[var(--text)] mt-1">
-                        Uptime: {metrics?.uptime || 'Unknown'}
+                        Uptime: {data.metrics?.uptime || 'Unknown'}
                     </div>
                 </div>
                 <div className="w-full">
@@ -183,16 +198,16 @@ export default function MetricsGrid() {
             {/* CPU Graph */}
             <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
                 <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {metrics?.cpu ?? 0}%
+                    {data.metrics?.cpu ?? 0}%
                 </div>
                 <div className="text-sm text-[var(--text)] text-center mb-4">CPU Usage</div>
                 <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={cpuHistory}>
+                    <AreaChart data={data.history}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
                         <YAxis stroke="var(--text)" fontSize={10} domain={[0, 100]} />
                         <Tooltip contentStyle={{ backgroundColor: 'var(--bg)', border: '2px solid var(--border)' }} />
-                        <Area type="monotone" dataKey="value" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
+                        <Area type="monotone" dataKey="cpu" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
@@ -200,16 +215,16 @@ export default function MetricsGrid() {
             {/* Memory Graph */}
             <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
                 <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {metrics?.memory?.used ?? 0} GB / {memoryTotal} GB
+                    {data.metrics?.memory?.used ?? 0} GB / {data.memoryTotal} GB
                 </div>
                 <div className="text-sm text-[var(--text)] text-center mb-4">Memory</div>
                 <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={memoryHistory}>
+                    <AreaChart data={data.history}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, memoryTotal]} tickFormatter={(value) => `${value} GB`} />
+                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, data.memoryTotal]} tickFormatter={(value) => `${value} GB`} />
                         <Tooltip contentStyle={{ backgroundColor: 'var(--bg)', border: '2px solid var(--border)' }} />
-                        <Area type="monotone" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
+                        <Area type="monotone" dataKey="memory" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
@@ -217,11 +232,11 @@ export default function MetricsGrid() {
             {/* Network Graph */}
             <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
                 <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {formatBytes(metrics?.network?.rx ?? 0)} / {formatBytes(metrics?.network?.tx ?? 0)}
+                    {formatBytes(data.metrics?.network?.rx ?? 0)} / {formatBytes(data.metrics?.network?.tx ?? 0)}
                 </div>
                 <div className="text-sm text-[var(--text)] text-center mb-4">Network</div>
                 <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={networkHistory}>
+                    <AreaChart data={data.history}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
                         <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={formatBytes} />
@@ -235,3 +250,24 @@ export default function MetricsGrid() {
         </div>
     );
 }
+
+export default memo(MetricsGrid, (prevData, nextData) => {
+    const prevM = prevData.metrics, nextM = nextData.metrics;
+    if (!prevM && !nextM) return true;
+    if (!prevM || !nextM) return false;
+    if (prevM.cpu !== nextM.cpu) return false;
+    if (prevM.memory?.used !== nextM.memory?.used) return false;
+    if (prevM.memory?.total !== nextM.memory?.total) return false;
+    if (prevM.network?.rx !== nextM.network?.rx) return false;
+    if (prevM.network?.tx !== nextM.network?.tx) return false;
+    if (prevM.uptime !== nextM.uptime) return false;
+
+    const prevS = prevData.pcStatus, nextS = nextData.pcStatus;
+    if (!prevS && !nextS) return true;
+    if (!prevS || !nextS) return false;
+    if (prevS.status !== nextS.status) return false;
+    if (prevS.hostname !== nextS.hostname) return false;
+
+    if (prevData.memoryTotal !== nextData.memoryTotal) return false;
+    return true;
+});
