@@ -2,7 +2,7 @@
 
 ## Architecture
 
-Two separate backend servers:
+Two backend servers:
 - **Metrics server** (port 8000): CPU, memory, disk, uptime, temperature, network stats
 - **Power server** (port 8001): Shutdown, reboot, sleep, wake commands
 
@@ -127,13 +127,22 @@ FastAPI app for remote power control:
 - 6 metric cards: CPU Usage, Memory, Disk, Uptime, Temperature, Network
 - 2px borders, hover effect
 - **Real-time polling:**
-  - `/api/metrics` every 1 second
-  - `/api/status` every 5 seconds
+  - `/api/metrics` every 5 seconds
+  - `/api/status` every 10 seconds
 - **Recharts area charts:**
   - CPU graph: purple area chart, 0-100%
   - Memory graph: green area chart, GB used / total
   - Network graph: dual area charts (Download: amber, Upload: cyan)
 - **Dynamic byte formatting:** B, KB, MB, GB, TB
+- **Backend availability tracking:**
+  - `backendAvailable` state tracks API connectivity
+  - Shows "Backend Offline" error card when both metrics and status unavailable
+  - Status displays Offline (red) when backend unreachable
+- **Null safety:** Optional chaining (`?.`) on all metrics access
+- **Offline polling optimization:**
+  - When backend offline, status interval calls status-only fetch
+  - Skips metrics fetch to reduce unnecessary network requests
+- **Network chart minimum:** Y-axis domain fixed to [0, dataMax + 100]
 
 ### PowerControls (`frontend/src/components/PowerControls.jsx`)
 - 4 buttons: Shutdown, Reboot, Sleep, Wake

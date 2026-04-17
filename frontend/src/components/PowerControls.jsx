@@ -37,38 +37,38 @@ export default function PowerControls() {
   };
 
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-2">
       <button
         onClick={() => handleAction('shutdown')}
         disabled={loading}
-        className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold rounded-lg border-b-4 border-red-800 hover:border-red-600 active:border-b-0 active:mt-1 transition-all"
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
       >
         {loading ? 'Processing...' : 'Shutdown'}
       </button>
       <button
         onClick={() => handleAction('reboot')}
         disabled={loading}
-        className="px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white font-bold rounded-lg border-b-4 border-orange-800 hover:border-orange-600 active:border-b-0 active:mt-1 transition-all"
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
       >
         {loading ? 'Processing...' : 'Reboot'}
       </button>
       <button
         onClick={() => handleAction('sleep')}
         disabled={loading}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold rounded-lg border-b-4 border-blue-800 hover:border-blue-600 active:border-b-0 active:mt-1 transition-all"
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
       >
         {loading ? 'Processing...' : 'Sleep'}
       </button>
       <button
         onClick={() => handleAction('wake')}
         disabled={loading}
-        className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold rounded-lg border-b-4 border-green-800 hover:border-green-600 active:border-b-0 active:mt-1 transition-all"
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
       >
         {loading ? 'Processing...' : 'Wake'}
       </button>
 
       {error && (
-        <div className="absolute bottom-4 text-red-500 text-sm">
+        <div className="w-full text-center text-red-400 text-sm mt-3">
           {error}
         </div>
       )}

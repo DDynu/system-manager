@@ -7,7 +7,6 @@ function App() {
     <Layout>
       <main className="main-content">
         <MetricsGrid />
-        <PowerControls />
       </main>
     </Layout>
   )

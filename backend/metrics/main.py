@@ -13,7 +13,7 @@ app = FastAPI(title="System Manager API")
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8085", "http://192.168.100.80:8085", "http://localhost:5173"],
+    allow_origins=["http://localhost:8085", "http://192.168.100.80:8085", "http://localhost:5173", "http://192.168.100.140:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,7 +25,7 @@ class Metrics(BaseModel):
     memory: dict
     disk: dict
     uptime: str
-    temperature: Optional[int] = None
+    temperature: float 
     network: dict
 
 
@@ -57,11 +57,9 @@ def get_uptime():
 def get_temperature():
     try:
         temps = psutil.sensors_temperatures()
-        if temps:
+        if temps.get("k10temp"):
             # Get first available sensor
-            first = list(temps.values())[0]
-            temp = list(first.values())[0]
-            return int(temp.current) if temp.current else None
+            return temps.get("k10temp")[0].current
     except Exception:
         pass
     return None
