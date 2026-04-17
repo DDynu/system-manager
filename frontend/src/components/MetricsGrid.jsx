@@ -1,4 +1,4 @@
-import { useState, useEffect, React, memo } from 'react';
+import { useState, useEffect, React } from 'react';
 import {
     AreaChart,
     Area,
@@ -155,19 +155,6 @@ function MetricsGrid() {
         );
     }
 
-    if (!data.backendAvailable && !data.isFirstFetch) {
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div className="bg-[var(--bg)] border-2 border-red-500 rounded-xl p-6 lg:col-span-3 flex items-center justify-center">
-                    <div className="text-center text-red-500">
-                        <div className="text-2xl font-bold mb-2">Backend Offline</div>
-                        <div>Unable to connect to metrics server</div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     const statusColor = data.backendAvailable && data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
 
     return (
@@ -194,6 +181,16 @@ function MetricsGrid() {
                     <PowerControls />
                 </div>
             </div>
+
+            {/* Offline Warning */}
+            {!data.backendAvailable && !data.isFirstFetch && (
+                <div className="bg-[var(--bg)] border-2 border-red-500 rounded-xl p-6 lg:col-span-3 flex items-center justify-center">
+                    <div className="text-center text-red-500">
+                        <div className="text-2xl font-bold mb-2">Backend Offline</div>
+                        <div>Unable to connect to metrics server</div>
+                    </div>
+                </div>
+            )}
 
             {/* CPU Graph */}
             <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
@@ -251,23 +248,4 @@ function MetricsGrid() {
     );
 }
 
-export default memo(MetricsGrid, (prevData, nextData) => {
-    const prevM = prevData.metrics, nextM = nextData.metrics;
-    if (!prevM && !nextM) return true;
-    if (!prevM || !nextM) return false;
-    if (prevM.cpu !== nextM.cpu) return false;
-    if (prevM.memory?.used !== nextM.memory?.used) return false;
-    if (prevM.memory?.total !== nextM.memory?.total) return false;
-    if (prevM.network?.rx !== nextM.network?.rx) return false;
-    if (prevM.network?.tx !== nextM.network?.tx) return false;
-    if (prevM.uptime !== nextM.uptime) return false;
-
-    const prevS = prevData.pcStatus, nextS = nextData.pcStatus;
-    if (!prevS && !nextS) return true;
-    if (!prevS || !nextS) return false;
-    if (prevS.status !== nextS.status) return false;
-    if (prevS.hostname !== nextS.hostname) return false;
-
-    if (prevData.memoryTotal !== nextData.memoryTotal) return false;
-    return true;
-});
+export default MetricsGrid;
