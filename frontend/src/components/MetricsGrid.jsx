@@ -224,7 +224,7 @@ function MetricsGrid() {
                 className="glass-card rounded-xl p-6 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md"
             >
                 <div className="text-center">
-                    <div className="text-3xl font-bold text-[var(--text-h)] mb-1">
+                    <div className="text-3xl font-bold text-[var(--text-h)] mb-1" style={{ fontFamily: "'Zen Dots', cursive" }}>
                         {data.pcStatus.hostname || 'Unknown'}
                     </div>
                     <div className={`text-lg font-semibold ${statusColor}`} style={{ fontFamily: "'Zen Dots', cursive" }}>
