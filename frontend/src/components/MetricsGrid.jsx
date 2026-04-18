@@ -104,7 +104,7 @@ function MetricsGrid() {
         metrics: null,
         history: [],
         memoryTotal: 0,
-        pcStatus: { name: '', status: 'Offline' },
+        pcStatus: { hostname: '', status: 'Offline' },
         backendAvailable: false,
         loading: true,
         isFirstFetch: true,
@@ -143,7 +143,7 @@ function MetricsGrid() {
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { name: prev.pcStatus.name, status: 'Offline' }, backendAvailable: false }));
+                setData(prev => ({ ...prev, pcStatus: { hostname: prev.pcStatus.hostname, status: 'Offline' }, backendAvailable: false }));
             }
         };
 
@@ -154,7 +154,7 @@ function MetricsGrid() {
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { name: prev.pcStatus.name, status: 'Offline' } }));
+                setData(prev => ({ ...prev, pcStatus: { hostname: prev.pcStatus.hostname, status: 'Offline' } }));
             }
         };
 
