@@ -1,4 +1,4 @@
-import { useState, useEffect, React } from 'react';
+import { useState, useEffect, useRef, React } from 'react';
 import {
     AreaChart,
     Area,
@@ -110,6 +110,7 @@ function MetricsGrid() {
         isFirstFetch: true,
         currentTime: new Date().toLocaleTimeString()
     });
+    const backendRef = useRef(data.backendAvailable);
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -140,10 +141,12 @@ function MetricsGrid() {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
+                backendRef.current = true;
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { hostname: prev.pcStatus.hostname, status: 'Offline' }, backendAvailable: false }));
+                backendRef.current = false;
+                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
             }
         };
 
@@ -151,10 +154,12 @@ function MetricsGrid() {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
+                backendRef.current = true;
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { hostname: prev.pcStatus.hostname, status: 'Offline' } }));
+                backendRef.current = false;
+                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
             }
         };
 
@@ -164,7 +169,7 @@ function MetricsGrid() {
 
         const metricsInterval = setInterval(fetchMetrics, 5000);
         const statusInterval = setInterval(() => {
-            if (!data.backendAvailable) {
+            if (!backendRef.current) {
                 fetchStatusOnly();
             } else {
                 fetchStatus();
