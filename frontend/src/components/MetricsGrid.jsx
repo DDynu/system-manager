@@ -143,7 +143,7 @@ function MetricsGrid() {
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { name: '', status: 'Offline' }, backendAvailable: false }));
+                setData(prev => ({ ...prev, pcStatus: { name: prev.pcStatus.name, status: 'Offline' }, backendAvailable: false }));
             }
         };
 
@@ -151,7 +151,7 @@ function MetricsGrid() {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
-                setData(prev => ({ ...prev, pcStatus: statusData }));
+                setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 setData(prev => ({ ...prev, pcStatus: { name: prev.pcStatus.name, status: 'Offline' } }));
@@ -215,7 +215,7 @@ function MetricsGrid() {
         );
     }
 
-    const statusColor = data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
+    const statusColor = data.backendAvailable && data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
