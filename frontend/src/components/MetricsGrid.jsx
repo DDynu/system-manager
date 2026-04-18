@@ -227,7 +227,7 @@ function MetricsGrid() {
                     <div className="text-3xl font-bold text-[var(--text-h)] mb-1">
                         {data.pcStatus.hostname || 'Unknown'}
                     </div>
-                    <div className={`text-lg font-semibold ${statusColor}`}>
+                    <div className={`text-lg font-semibold ${statusColor}`} style={{ fontFamily: "'Zen Dots', cursive" }}>
                         {data.pcStatus.status}
                     </div>
                     <div className="text-sm text-[var(--text)] mt-2">
