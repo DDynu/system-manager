@@ -39,11 +39,9 @@ function formatBytes(bytes) {
     return `${value.toFixed(1)} ${sizes[i]}`;
 }
 
-const chartShellStyle = { backgroundColor: 'var(--bg)', border: '2px solid var(--border)' };
-
 function ChartShell({ title, subtitle, children }) {
     return (
-        <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
+        <div className="glass-card rounded-xl p-6 backdrop-blur-md">
             <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
                 {title}
             </div>
@@ -66,7 +64,7 @@ function ChartsView({ metrics, memoryTotal, history }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
                     <YAxis stroke="var(--text)" fontSize={10} domain={[0, 100]} />
-                    <Tooltip contentStyle={chartShellStyle} />
+                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '2px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }} />
                     <Area type="monotone" dataKey="cpu" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
                 </AreaChart>
             </ChartShell>
@@ -79,7 +77,7 @@ function ChartsView({ metrics, memoryTotal, history }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
                     <YAxis stroke="var(--text)" fontSize={10} domain={[0, memoryTotal]} tickFormatter={(value) => `${value} GB`} />
-                    <Tooltip contentStyle={chartShellStyle} />
+                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '2px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }} />
                     <Area type="monotone" dataKey="memory" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
                 </AreaChart>
             </ChartShell>
@@ -196,7 +194,7 @@ function MetricsGrid() {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {/* PC Status Placeholder */}
-                <div className="bg-[var(--bg)] border-2 border-[var(--accent-border)] rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 animate-pulse md:h-[172px] lg:h-[193px]">
+                <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 animate-pulse md:h-[172px] lg:h-[193px] backdrop-blur-md">
                     <div className="text-center">
                         <div className="h-8 bg-[var(--border)] rounded mb-2 w-48 mx-auto" />
                         <div className="h-6 bg-[var(--border)] rounded w-24 mx-auto mb-4" />
@@ -207,7 +205,7 @@ function MetricsGrid() {
 
                 {/* Metric Card Placeholders */}
                 {[...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6 animate-pulse md:h-[274px] lg:h-[289px]">
+                    <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[274px] lg:h-[289px] backdrop-blur-md">
                         <div className="h-8 bg-[var(--border)] rounded w-24 mb-2" />
                         <div className="h-4 bg-[var(--border)] rounded w-20 mb-4" />
                         <div className="h-[150px] bg-[var(--border)] rounded" />
@@ -223,7 +221,7 @@ function MetricsGrid() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {/* PC Status Card */}
             <div
-                className="bg-[var(--bg)] border-2 border-[var(--accent-border)] rounded-xl p-6 lg:col-span-3 flex flex-col items-center justify-center gap-4"
+                className="glass-card rounded-xl p-6 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md"
             >
                 <div className="text-center">
                     <div className="text-3xl font-bold text-[var(--text-h)] mb-1">

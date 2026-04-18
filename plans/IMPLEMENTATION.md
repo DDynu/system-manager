@@ -122,7 +122,7 @@ FastAPI app for remote power control:
 ## Frontend Components
 
 ### Layout (`frontend/src/components/Layout.jsx`)
-- Full-screen scenery background (Unsplash mountain photo, dark overlay)
+- Full-screen scenery background (Unsplash mountain photo, dark overlay) — on `#root` in CSS
 - `minHeight: '100vh'`, `padding: '24px'`
 - Inner container: `maxWidth: '1200px'`, `margin: '0 auto'`, `className="w-full"`
 - Single page layout
@@ -132,6 +132,7 @@ FastAPI app for remote power control:
 - 3 chart cards: CPU Usage, Memory, Network
 - **ChartShell** component: shared wrapper for title, subtitle, ResponsiveContainer
 - **ChartsView** component: composes 3 charts, wrapped in `{data.backendAvailable && (...)}`
+- **Glass cards:** `.glass-card` CSS class — `bg-black/40`, `border-white/10`, `backdrop-blur-md`
 - 2px borders, hover effect
 - **Unified state object:** `data` holds `metrics`, `history`, `memoryTotal`, `pcStatus`, `backendAvailable`, `loading`, `isFirstFetch`, `currentTime`
 - **History array:** Single `history` array stores `{time, cpu, memory, rx, tx}` per tick, sliced to last 20 entries
@@ -218,8 +219,9 @@ VITE_METRICS_API_URL=http://192.168.100.140:8000
 - **PowerControls removed** from App.jsx (moved inside MetricsGrid PC Status card)
 
 ### CSS (`frontend/src/index.css`)
-- `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background with dark gradient overlay
+- `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background (Unsplash mountain, dark gradient overlay)
 - `.main-content`: `flex: 1`, `padding: 32px`, `gap: 32px`
+- `.glass-card`: `bg-black/40`, `border-white/10`, `backdrop-blur(12px)`, `-webkit-backdrop-filter` fallback
 
 ## Start Scripts
 
