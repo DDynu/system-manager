@@ -215,7 +215,7 @@ function MetricsGrid() {
         );
     }
 
-    const statusColor = data.backendAvailable && data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
+    const statusColor = data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
