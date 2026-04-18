@@ -154,7 +154,7 @@ function MetricsGrid() {
                 setData(prev => ({ ...prev, pcStatus: statusData }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
-                setData(prev => ({ ...prev, pcStatus: { name: '', status: 'Offline' } }));
+                setData(prev => ({ ...prev, pcStatus: { name: prev.pcStatus.name, status: 'Offline' } }));
             }
         };
 
