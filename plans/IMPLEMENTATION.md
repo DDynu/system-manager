@@ -135,6 +135,7 @@ FastAPI app for remote power control:
 - **Glass cards:** `.glass-card` CSS class — `bg-black/40`, `border-white/10`, `backdrop-blur-md`
 - 2px borders, hover effect
 - **Unified state object:** `data` holds `metrics`, `history`, `memoryTotal`, `pcStatus`, `backendAvailable`, `loading`, `isFirstFetch`, `currentTime`
+- **`backendRef`:** mutable ref tracking `backendAvailable` to avoid stale closure in `setInterval`
 - **History array:** Single `history` array stores `{time, cpu, memory, rx, tx}` per tick, sliced to last 20 entries
 - **Real-time polling:**
   - `/api/metrics` every 5 seconds
@@ -152,8 +153,13 @@ FastAPI app for remote power control:
   - Uptime only shown when `backendAvailable`
 - **Null safety:** Optional chaining (`?.`) and nullish coalescing (`??`) on all metrics access
 - **Offline polling optimization:**
+  - `backendRef` tracks current backend state (avoids stale closure in intervals)
   - When backend offline, status interval calls `fetchStatusOnly()` instead of full `fetchStatus()`
   - Skips metrics fetch to reduce unnecessary network requests
+- **Offline resilience:**
+  - On fetch failure, `pcStatus` spread preserves `hostname` (never resets to empty)
+  - `fetchStatusOnly` sets `backendAvailable: true` on success → color syncs with status text
+  - Status color: green when `backendAvailable && status === 'Online'`, red otherwise
 - **Network chart Y-axis:** Domain fixed to `[0, 'dataMax + 100']`
 - **Time update:** `currentTime` refreshed every status interval (10s)
 
