@@ -128,7 +128,7 @@ FastAPI app for remote power control:
 - Single page layout
 
 ### MetricsGrid (`frontend/src/components/MetricsGrid.jsx`)
-- PC Status card (full width, Online/Offline) with PowerControls embedded inside
+- PC Status card (full width, Online/Offline) with PowerControls embedded inside, Zen Dots font for hostname/status
 - 3 chart cards: CPU Usage, Memory, Network
 - **ChartShell** component: shared wrapper for title, subtitle, ResponsiveContainer
 - **ChartsView** component: composes 3 charts, wrapped in `{data.backendAvailable && (...)}`
@@ -196,13 +196,14 @@ FastAPI app for remote power control:
 - **h2**: Montserrat, 500 weight, 24px, responsive 20px at <1024px
 - **Body**: Montserrat, 18px, responsive 16px at <1024px
 - **code/mono**: Montserrat + Consolas monospace
+- **PC Status**: Zen Dots font (hostname + status label)
 
 ### Tech Stack
 - React 19.2.4 + Vite
 - Tailwind CSS 4.2.2 (CSS-first, `@tailwindcss/vite` plugin)
 - Recharts for charts
 - Babel + React Compiler (`@vitejs/plugin-react` with `reactCompilerPreset`)
-- Montserrat + Bitcount Grid Double fonts from Google Fonts
+- Montserrat + Bitcount Grid Double + Zen Dots fonts from Google Fonts
 
 ### Frontend Env
 ```bash
