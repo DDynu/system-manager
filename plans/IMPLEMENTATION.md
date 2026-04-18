@@ -53,7 +53,7 @@ FastAPI app exposing:
 ```python
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8085", "http://192.168.100.80:8085", "http://localhost:5173", "http://192.168.100.140:5173", "http://192.168.100.140:4173"],
+    allow_origins=["http://192.168.100.140:4173", "http://192.168.100.140:5173", "http://192.168.100.80:8085", "http://localhost:5173", "http://localhost:8085"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -122,13 +122,16 @@ FastAPI app for remote power control:
 ## Frontend Components
 
 ### Layout (`frontend/src/components/Layout.jsx`)
-- Inline styles: `backgroundColor: '#1a1b26'`, `color: '#a9b1d6'`, `minHeight: '100vh'`, `padding: '24px'`
-- `maxWidth: '1200px'` centered container
+- Full-screen scenery background (Unsplash mountain photo, dark overlay)
+- `minHeight: '100vh'`, `padding: '24px'`
+- Inner container: `maxWidth: '1200px'`, `margin: '0 auto'`, `className="w-full"`
 - Single page layout
 
 ### MetricsGrid (`frontend/src/components/MetricsGrid.jsx`)
 - PC Status card (full width, Online/Offline) with PowerControls embedded inside
 - 3 chart cards: CPU Usage, Memory, Network
+- **ChartShell** component: shared wrapper for title, subtitle, ResponsiveContainer
+- **ChartsView** component: composes 3 charts, wrapped in `{data.backendAvailable && (...)}`
 - 2px borders, hover effect
 - **Unified state object:** `data` holds `metrics`, `history`, `memoryTotal`, `pcStatus`, `backendAvailable`, `loading`, `isFirstFetch`, `currentTime`
 - **History array:** Single `history` array stores `{time, cpu, memory, rx, tx}` per tick, sliced to last 20 entries
@@ -215,7 +218,7 @@ VITE_METRICS_API_URL=http://192.168.100.140:8000
 - **PowerControls removed** from App.jsx (moved inside MetricsGrid PC Status card)
 
 ### CSS (`frontend/src/index.css`)
-- `#root`: fixed `1126px` width, `border-inline`, `min-height: 100svh`, flex column, centered
+- `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background with dark gradient overlay
 - `.main-content`: `flex: 1`, `padding: 32px`, `gap: 32px`
 
 ## Start Scripts
