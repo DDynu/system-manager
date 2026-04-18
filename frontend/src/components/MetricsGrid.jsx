@@ -90,7 +90,7 @@ function ChartsView({ metrics, memoryTotal, history }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
                     <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={formatBytes} />
-                    <Tooltip contentStyle={chartShellStyle} formatter={(value) => formatBytes(value)} />
+                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '2px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }} formatter={(value) => formatBytes(value)} />
                     <Area type="monotone" dataKey="rx" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Download" />
                     <Area type="monotone" dataKey="tx" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
                 </AreaChart>
