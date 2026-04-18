@@ -39,6 +39,68 @@ function formatBytes(bytes) {
     return `${value.toFixed(1)} ${sizes[i]}`;
 }
 
+const chartShellStyle = { backgroundColor: 'var(--bg)', border: '2px solid var(--border)' };
+
+function ChartShell({ title, subtitle, children }) {
+    return (
+        <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
+            <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
+                {title}
+            </div>
+            <div className="text-sm text-[var(--text)] text-center mb-4">{subtitle}</div>
+            <ResponsiveContainer width="100%" height={150}>
+                {children}
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+function ChartsView({ metrics, memoryTotal, history }) {
+    return (
+        <>
+            <ChartShell
+                title={`${metrics?.cpu ?? 0}%`}
+                subtitle="CPU Usage"
+            >
+                <AreaChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
+                    <YAxis stroke="var(--text)" fontSize={10} domain={[0, 100]} />
+                    <Tooltip contentStyle={chartShellStyle} />
+                    <Area type="monotone" dataKey="cpu" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
+                </AreaChart>
+            </ChartShell>
+
+            <ChartShell
+                title={`${metrics?.memory?.used ?? 0} GB / ${memoryTotal} GB`}
+                subtitle="Memory"
+            >
+                <AreaChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
+                    <YAxis stroke="var(--text)" fontSize={10} domain={[0, memoryTotal]} tickFormatter={(value) => `${value} GB`} />
+                    <Tooltip contentStyle={chartShellStyle} />
+                    <Area type="monotone" dataKey="memory" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
+                </AreaChart>
+            </ChartShell>
+
+            <ChartShell
+                title={`${formatBytes(metrics?.network?.rx ?? 0)} / ${formatBytes(metrics?.network?.tx ?? 0)}`}
+                subtitle="Network"
+            >
+                <AreaChart data={history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
+                    <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={formatBytes} />
+                    <Tooltip contentStyle={chartShellStyle} formatter={(value) => formatBytes(value)} />
+                    <Area type="monotone" dataKey="rx" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Download" />
+                    <Area type="monotone" dataKey="tx" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
+                </AreaChart>
+            </ChartShell>
+        </>
+    );
+}
+
 function MetricsGrid() {
     const [data, setData] = useState({
         metrics: null,
@@ -173,76 +235,24 @@ function MetricsGrid() {
                     <div className="text-sm text-[var(--text)] mt-2">
                         {data.currentTime}
                     </div>
-                    <div className="text-sm text-[var(--text)] mt-1">
-                        Uptime: {data.metrics?.uptime || 'Unknown'}
-                    </div>
+                    {data.backendAvailable && (
+                        <div className="text-sm text-[var(--text)] mt-1">
+                            Uptime: {data.metrics?.uptime || 'Unknown'}
+                        </div>
+                    )}
                 </div>
                 <div className="w-full">
                     <PowerControls />
                 </div>
             </div>
 
-            {/* Offline Warning */}
-            {!data.backendAvailable && !data.isFirstFetch && (
-                <div className="bg-[var(--bg)] border-2 border-red-500 rounded-xl p-6 lg:col-span-3 flex items-center justify-center">
-                    <div className="text-center text-red-500">
-                        <div className="text-2xl font-bold mb-2">Backend Offline</div>
-                        <div>Unable to connect to metrics server</div>
-                    </div>
-                </div>
+            {data.backendAvailable && (
+                <ChartsView
+                    metrics={data.metrics}
+                    memoryTotal={data.memoryTotal}
+                    history={data.history}
+                />
             )}
-
-            {/* CPU Graph */}
-            <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
-                <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {data.metrics?.cpu ?? 0}%
-                </div>
-                <div className="text-sm text-[var(--text)] text-center mb-4">CPU Usage</div>
-                <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={data.history}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, 100]} />
-                        <Tooltip contentStyle={{ backgroundColor: 'var(--bg)', border: '2px solid var(--border)' }} />
-                        <Area type="monotone" dataKey="cpu" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Memory Graph */}
-            <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
-                <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {data.metrics?.memory?.used ?? 0} GB / {data.memoryTotal} GB
-                </div>
-                <div className="text-sm text-[var(--text)] text-center mb-4">Memory</div>
-                <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={data.history}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, data.memoryTotal]} tickFormatter={(value) => `${value} GB`} />
-                        <Tooltip contentStyle={{ backgroundColor: 'var(--bg)', border: '2px solid var(--border)' }} />
-                        <Area type="monotone" dataKey="memory" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={2} />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Network Graph */}
-            <div className="bg-[var(--bg)] border-2 border-[var(--border)] rounded-xl p-6">
-                <div className="text-xl font-bold text-[var(--text-h)] mb-2 text-center">
-                    {formatBytes(data.metrics?.network?.rx ?? 0)} / {formatBytes(data.metrics?.network?.tx ?? 0)}
-                </div>
-                <div className="text-sm text-[var(--text)] text-center mb-4">Network</div>
-                <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={data.history}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={formatBytes} />
-                        <Tooltip contentStyle={{ backgroundColor: 'var(--bg)', border: '2px solid var(--border)' }} formatter={(value) => formatBytes(value)} />
-                        <Area type="monotone" dataKey="rx" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Download" />
-                        <Area type="monotone" dataKey="tx" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
 
         </div>
     );
