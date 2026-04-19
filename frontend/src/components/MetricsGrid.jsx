@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     AreaChart,
     Area,
@@ -8,8 +8,6 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import PowerControls from './PowerControls';
-
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
 function formatBytes(bytes) {
@@ -39,7 +37,7 @@ function ChartShell({ title, subtitle, children }) {
     );
 }
 
-function ChartsView({ metrics, memoryTotal, history }) {
+const ChartsView = React.memo(function ChartsView({ metrics, memoryTotal, history }) {
     return (
         <>
             <ChartShell
@@ -182,9 +180,6 @@ function MetricsGrid() {
                 <div className="text-3xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>Offline</div>
                 <div className="text-lg font-semibold text-red-500" style={{ fontFamily: "'Zen Dots', cursive" }}>Backend Offline</div>
                 <div className="text-sm text-[var(--text)] mt-2">{data.currentTime}</div>
-                <div className="w-full">
-                    <PowerControls />
-                </div>
             </div>
         );
     }
@@ -210,9 +205,6 @@ function MetricsGrid() {
                     <div className="text-sm text-[var(--text)] mt-1">
                         Uptime: {data.metrics?.uptime || 'Unknown'}
                     </div>
-                </div>
-                <div className="w-full">
-                    <PowerControls />
                 </div>
             </div>
 

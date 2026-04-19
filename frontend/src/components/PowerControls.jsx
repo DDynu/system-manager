@@ -46,12 +46,17 @@ function PowerControls() {
     }
   }, []);
 
+  const handleShutdown = useCallback(() => handleAction('shutdown'), [handleAction]);
+  const handleReboot = useCallback(() => handleAction('reboot'), [handleAction]);
+  const handleSleep = useCallback(() => handleAction('sleep'), [handleAction]);
+  const handleWake = useCallback(() => handleAction('wake'), [handleAction]);
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-2">
-      <PowerButton label="Shutdown" loading={loading} onAction={() => handleAction('shutdown')} />
-      <PowerButton label="Reboot" loading={loading} onAction={() => handleAction('reboot')} />
-      <PowerButton label="Sleep" loading={loading} onAction={() => handleAction('sleep')} />
-      <PowerButton label="Wake" loading={loading} onAction={() => handleAction('wake')} />
+      <PowerButton label="Shutdown" loading={loading} onAction={handleShutdown} />
+      <PowerButton label="Reboot" loading={loading} onAction={handleReboot} />
+      <PowerButton label="Sleep" loading={loading} onAction={handleSleep} />
+      <PowerButton label="Wake" loading={loading} onAction={handleWake} />
 
       {error && (
         <div className="w-full text-center text-red-400 text-sm mt-3">
@@ -62,4 +67,4 @@ function PowerControls() {
   );
 }
 
-export default PowerControls;
+export default memo(PowerControls);
