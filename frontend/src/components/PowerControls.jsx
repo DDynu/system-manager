@@ -6,7 +6,7 @@ const PowerButton = memo(({ label, loading, onAction }) => (
     <button
         onClick={onAction}
         disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2.5 sm:px-6 sm:py-3 glass-card rounded-xl text-white font-semibold text-sm tracking-wide hover:bg-[var(--accent)]/25 hover:border-[var(--accent)]/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-[var(--border)]/20 transition-all duration-200 touch-manipulation active:scale-[0.97]"
+        className="w-28 px-4 py-2.5 glass-card rounded-xl text-white font-semibold text-sm tracking-wide hover:bg-[var(--accent)]/25 hover:border-[var(--accent)]/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-[var(--border)]/20 transition-all duration-200 touch-manipulation active:scale-[0.97]"
     >
         {loading ? 'Processing...' : label}
     </button>
