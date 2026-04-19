@@ -113,7 +113,7 @@ FastAPI app for remote power control via SSH:
 
 **Implementation:**
 - `config.py`: Parses .env, returns target dict and SSH settings
-- `ssh.py`: `connect_ssh()` with retry logic, `execute_command()` returns {success, stdout, stderr, exit_code}
+- `ssh.py`: `connect_ssh()` with retry logic, `execute_command()` returns `{success, stdout, stderr, exit_code}`
 - `power.py`: Endpoints call `execute_command()` via SSH, return error details on failure
 - `wake`: Uses `wakeonlan` CLI (no SSH needed), MAC from TARGET_MAC env var
 - Error responses: 400 (no confirm), 401 (auth fail), 503 (connection fail), 500 (command fail)
@@ -162,7 +162,7 @@ FastAPI app for remote power control via SSH:
 
 ### PowerControls (`frontend/src/components/PowerControls.jsx`)
 - 4 buttons: Shutdown, Reboot, Sleep, Wake
-- Glassmorphism style — uses `.glass-card` class matching the card aesthetic
+- Glassmorphism style — uses `.glass-card` class matching card aesthetic
 - Hover: purple tint (`bg-[var(--accent)]/25`), border glow (`border-[var(--accent)]/60`), shadow (`0 0 30px rgba(168,85,247,0.3)`)
 - Disabled: muted opacity, no hover effects
 - Active: smooth scale-down (`active:scale-[0.97]`)
@@ -223,7 +223,7 @@ VITE_POWER_API_URL=http://192.168.100.140:8001
 
 ### App.jsx
 - Renders `<Layout>` → `<main>` → `<MetricsGrid />`
-- **PowerControls** embedded inside MetricsGrid PC Status card
+- **PowerControls embedded** inside MetricsGrid PC Status card (wrapped in `memo`, no re-render on chart updates)
 
 ### CSS (`frontend/src/index.css`)
 - `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background (local AVIF + JPEG fallback via `image-set()`, dark gradient overlay)
