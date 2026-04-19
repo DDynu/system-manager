@@ -65,7 +65,7 @@ def test_connect_ssh_with_key():
     mock_client.get_transport.return_value = mock_transport
 
     with patch("paramiko.SSHClient") as MockSSH, \
-         patch("paramiko.RSAKey.from_private_key_file") as MockKey:
+         patch("paramiko.pkey.PKey.from_private_key_file") as MockKey:
         MockSSH.return_value = mock_client
         mock_client.connect = MagicMock()
 

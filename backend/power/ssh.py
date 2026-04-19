@@ -15,7 +15,7 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
     for attempt in range(retries + 1):
         try:
             if key_path:
-                key = paramiko.RSAKey.from_private_key_file(key_path)
+                key = paramiko.pkey.PKey.from_private_key_file(key_path)
                 client.connect(
                     hostname=host,
                     port=port,
@@ -64,11 +64,13 @@ def execute_command(command, host, port, user, key_path="", password="", timeout
     try:
         client = connect_ssh(host, port, user, key_path, password, timeout, retries)
         stdin, stdout, stderr = client.exec_command(command)
+        output = stdout.read().decode()
+        errput = stderr.read().decode()
         exit_code = stdout.channel.recv_exit_status()
         return {
             "success": exit_code == 0,
-            "stdout": stdout.read().decode(),
-            "stderr": stderr.read().decode(),
+            "stdout": output,
+            "stderr": errput,
             "exit_code": exit_code,
         }
     except AuthenticationException:
