@@ -61,8 +61,7 @@ body {
 
 #root {
   background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)),
-              image-set(url('/bg.avif') type('image/avif') 1x,
-                        url('/bg.jpg') type('image/jpeg') 1x);
+              url('/bg.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
