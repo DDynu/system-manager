@@ -62,6 +62,4 @@ function PowerControls() {
   );
 }
 
-export default memo(PowerControls, (prevProps, nextProps) => {
-    return true;
-});
+export default PowerControls;

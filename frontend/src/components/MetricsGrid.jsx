@@ -95,7 +95,7 @@ function MetricsGrid() {
         loading: true,
         currentTime: new Date().toLocaleTimeString()
     });
-    const backendRef = useRef(data.backendAvailable);
+    const backendRef = useRef(false);
 
     useEffect(() => {
         const fetchMetrics = async () => {

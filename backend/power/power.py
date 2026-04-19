@@ -1,3 +1,5 @@
+import subprocess
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from backend.power.config import get_target, get_target_mac, get_ssh_timeout, get_ssh_retries, get_ssh_key_path, get_ssh_password
@@ -62,7 +64,6 @@ def wake():
     mac = get_target_mac()
     if not mac:
         raise HTTPException(status_code=400, detail="TARGET_MAC not configured")
-    import subprocess
     try:
         subprocess.run(["wakeonlan", mac], check=True, capture_output=True)
         return {"message": f"WOL packet sent to {mac}"}
