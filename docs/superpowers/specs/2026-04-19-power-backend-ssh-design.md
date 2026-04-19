@@ -20,6 +20,7 @@ Targets configured in `.env`. Single target only — all commands go to that one
 
 ```bash
 TARGETS=192.168.100.50:22:root
+TARGET_MAC=AA:BB:CC:DD:EE:FF
 SSH_KEY_PATH=~/.ssh/id_rsa
 SSH_PASSWORD=
 SSH_TIMEOUT=10
