@@ -153,3 +153,17 @@ def test_wake_no_binary(client, mock_config):
         resp = client.post("/api/power/wake")
         assert resp.status_code == 500
         assert "wakeonlan command not found" in resp.json()["detail"]
+
+
+def test_shutdown_ssh_fail(client, mock_config, mock_ssh_fail):
+    """Shutdown returns 503 when SSH fails."""
+    resp = client.post("/api/power/shutdown", json={"confirm": True})
+    assert resp.status_code == 503
+    assert "detail" in resp.json()
+
+
+def test_reboot_ssh_fail(client, mock_config, mock_ssh_fail):
+    """Reboot returns 503 when SSH fails."""
+    resp = client.post("/api/power/reboot", json={"confirm": True})
+    assert resp.status_code == 503
+    assert "detail" in resp.json()
