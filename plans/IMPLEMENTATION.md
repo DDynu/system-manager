@@ -8,7 +8,7 @@ Two backend servers:
 
 Frontend React app (port 5173) connects to both servers.
 
-**Note:** PowerControls currently uses hardcoded `http://localhost:8000/api` instead of power server port 8001. Power server not wired to frontend in current code.
+**Note:** PowerControls uses `VITE_METRICS_API_URL` env var. Power server (port 8001) not wired to frontend in current code.
 
 ## Project Structure
 
@@ -23,6 +23,9 @@ system-manager/
 │       └── start.sh       - Start script
 ├── frontend/
 │   ├── .env               - VITE_METRICS_API_URL config
+│   ├── public/
+│   │   ├── bg.avif        - Background image (139K, AVIF)
+│   │   └── bg.jpg         - Background fallback (40K, JPEG)
 │   ├── vite.config.js     - Vite + React + Tailwind + Babel config
 │   └── src/
 │       ├── App.jsx
@@ -122,9 +125,8 @@ FastAPI app for remote power control:
 ## Frontend Components
 
 ### Layout (`frontend/src/components/Layout.jsx`)
-- Full-screen scenery background (Unsplash mountain photo, dark overlay) — on `#root` in CSS
-- `minHeight: '100vh'`, `padding: '24px'`
-- Inner container: `maxWidth: '1200px'`, `margin: '0 auto'`, `className="w-full"`
+- Full-screen scenery background (local AVIF + JPEG fallback, dark overlay) — on `#root` in CSS
+- Tailwind classes: `min-h-screen p-6`, `w-full mx-auto max-w-3xl lg:max-w-[1200px]`
 - Single page layout
 
 ### MetricsGrid (`frontend/src/components/MetricsGrid.jsx`)
@@ -134,7 +136,7 @@ FastAPI app for remote power control:
 - **ChartsView** component: composes 3 charts, wrapped in `{data.backendAvailable && (...)}`
 - **Glass cards:** `.glass-card` CSS class — `bg-black/40`, `border-white/10`, `backdrop-blur-md`
 - 2px borders, hover effect
-- **Unified state object:** `data` holds `metrics`, `history`, `memoryTotal`, `pcStatus`, `backendAvailable`, `loading`, `isFirstFetch`, `currentTime`
+- **Unified state object:** `data` holds `metrics`, `history`, `memoryTotal`, `pcStatus`, `backendAvailable`, `loading`, `currentTime`
 - **`backendRef`:** mutable ref tracking `backendAvailable` to avoid stale closure in `setInterval`
 - **History array:** Single `history` array stores `{time, cpu, memory, rx, tx}` per tick, sliced to last 20 entries
 - **Real-time polling:**
@@ -152,24 +154,24 @@ FastAPI app for remote power control:
   - Status displays Offline (red) when backend unreachable
   - Uptime only shown when `backendAvailable`
 - **Null safety:** Optional chaining (`?.`) and nullish coalescing (`??`) on all metrics access
-- **Offline polling optimization:**
-  - `backendRef` tracks current backend state (avoids stale closure in intervals)
-  - When backend offline, status interval calls `fetchStatusOnly()` instead of full `fetchStatus()`
-  - Skips metrics fetch to reduce unnecessary network requests
 - **Offline resilience:**
   - On fetch failure, `pcStatus` spread preserves `hostname` (never resets to empty)
-  - `fetchStatusOnly` sets `backendAvailable: true` on success → color syncs with status text
   - Status color: green when `backendAvailable && status === 'Online'`, red otherwise
+- **Loading state:** Separate from metrics — shows skeleton cards while loading, falls through to offline card or dashboard
+- **Offline card:** Single centered card showing "Offline / Backend Offline" with PowerControls embedded
 - **Network chart Y-axis:** Domain fixed to `[0, 'dataMax + 100']`
 - **Time update:** `currentTime` refreshed every status interval (10s)
+- **Code cleanup:** Removed unused `areArraysEqual` function, unused `React` import, merged duplicate `fetchStatus`/`fetchStatusOnly` into single function, removed `isFirstFetch` state and related effects
 
 ### PowerControls (`frontend/src/components/PowerControls.jsx`)
 - 4 buttons: Shutdown, Reboot, Sleep, Wake
-- 3D effect, bottom borders
-- Active press animation (border gone, button moves down 1px)
+- Glassmorphism style — uses `.glass-card` class matching the card aesthetic
+- Hover: purple tint (`bg-[var(--accent)]/25`), border glow (`border-[var(--accent)]/60`), shadow (`0 0 30px rgba(168,85,247,0.3)`)
+- Disabled: muted opacity, no hover effects
+- Active: smooth scale-down (`active:scale-[0.97]`)
 - **Refactored:** Extracted `PowerButton` memo component with `min-w-[100px]` responsive sizing
 - **API calls:**
-  - Hardcoded `API_URL = 'http://localhost:8000/api'` (not using env var)
+  - Uses `VITE_METRICS_API_URL` env var (consistent with MetricsGrid)
   - POST to `/api/power/shutdown` with `{confirm: true}`
   - POST to `/api/power/reboot` with `{confirm: true}`
   - POST to `/api/power/sleep`
@@ -198,10 +200,10 @@ FastAPI app for remote power control:
 - Body `color-scheme: light dark`
 
 ### Typography
-- **h1**: Bitcount Grid Double font, 72px, gradient text (accent → text-h), responsive 48px at <1024px
-- **h2**: Montserrat, 500 weight, 24px, responsive 20px at <1024px
-- **Body**: Montserrat, 18px, responsive 16px at <1024px
-- **code/mono**: Montserrat + Consolas monospace
+- **h1**: Righteous font, 72px, gradient text (accent → text-h), responsive 48px at <1024px
+- **h2**: Righteous (via `--heading`), 500 weight, 24px, responsive 20px at <1024px
+- **Body**: Prompt, 18px, responsive 16px at <1024px
+- **code/mono**: Prompt + Consolas monospace
 - **PC Status**: Zen Dots font (hostname + status label)
 
 ### Tech Stack
@@ -209,7 +211,7 @@ FastAPI app for remote power control:
 - Tailwind CSS 4.2.2 (CSS-first, `@tailwindcss/vite` plugin)
 - Recharts for charts
 - Babel + React Compiler (`@vitejs/plugin-react` with `reactCompilerPreset`)
-- Montserrat + Bitcount Grid Double + Zen Dots fonts from Google Fonts
+- Prompt + Righteous + Bitcount Grid Double + Zen Dots fonts from Google Fonts
 
 ### Frontend Env
 ```bash
@@ -226,7 +228,8 @@ VITE_METRICS_API_URL=http://192.168.100.140:8000
 - **PowerControls removed** from App.jsx (moved inside MetricsGrid PC Status card)
 
 ### CSS (`frontend/src/index.css`)
-- `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background (Unsplash mountain, dark gradient overlay)
+- `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background (local AVIF + JPEG fallback via `image-set()`, dark gradient overlay)
+- **Background images**: `bg.avif` (139K, primary) + `bg.jpg` (40K, fallback) in `public/`
 - `.main-content`: `flex: 1`, `padding: 32px`, `gap: 32px`
 - `.glass-card`: `bg-black/40`, `border-white/10`, `backdrop-blur(12px)`, `-webkit-backdrop-filter` fallback
 
@@ -256,6 +259,27 @@ uvicorn power:power_app --reload --host 0.0.0.0 --port 8001
 - Frontend connected to real API with real-time polling
 - Recharts display live metrics data
 - All endpoints implemented and tested
+
+## Recent Changes
+
+### Frontend Cleanup
+- Deleted `ChartsSection.jsx` (dead code, never imported)
+- Removed unused `areArraysEqual` function and `React` import from MetricsGrid
+- Merged duplicate `fetchStatus`/`fetchStatusOnly` into single function
+- Removed `isFirstFetch` state and related effects
+- Fixed PowerControls to use `VITE_METRICS_API_URL` env var instead of hardcoded URL
+- Cleaned up Layout.jsx inline styles → Tailwind classes
+
+### Offline Bug Fix
+- Fixed infinite loading when backend is offline
+- Loading state separated from metrics check — shows skeleton while loading
+- Falls through to offline card or dashboard after loading clears
+- PowerControls embedded in offline card
+
+### Visual Updates
+- PowerControls buttons: removed 3D style, now uses glass-card class with purple glow hover
+- Fonts updated: Montserrat → Prompt (body), Righteous (headings)
+- Background image: external Unsplash URL → local AVIF + JPEG fallback (55% smaller)
 
 ## Verification
 

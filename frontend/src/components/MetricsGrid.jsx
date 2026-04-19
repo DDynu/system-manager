@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, React } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     AreaChart,
     Area,
@@ -11,20 +11,6 @@ import {
 import PowerControls from './PowerControls';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
-
-function areArraysEqual(a, b) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i].time !== b[i].time ||
-            a[i].cpu !== b[i].cpu ||
-            a[i].memory !== b[i].memory ||
-            a[i].rx !== b[i].rx ||
-            a[i].tx !== b[i].tx) {
-            return false;
-        }
-    }
-    return true;
-}
 
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
@@ -107,7 +93,6 @@ function MetricsGrid() {
         pcStatus: { hostname: '', status: 'Offline' },
         backendAvailable: false,
         loading: true,
-        isFirstFetch: true,
         currentTime: new Date().toLocaleTimeString()
     });
     const backendRef = useRef(data.backendAvailable);
@@ -150,30 +135,13 @@ function MetricsGrid() {
             }
         };
 
-        const fetchStatusOnly = async () => {
-            try {
-                const statusRes = await fetch(`${METRICS_API_URL}/status`);
-                const statusData = await statusRes.json();
-                backendRef.current = true;
-                setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
-            } catch (err) {
-                console.error('Failed to fetch status:', err);
-                backendRef.current = false;
-                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
-            }
-        };
-
         fetchMetrics();
         fetchStatus();
         setData(prev => ({ ...prev, loading: false }));
 
         const metricsInterval = setInterval(fetchMetrics, 5000);
         const statusInterval = setInterval(() => {
-            if (!backendRef.current) {
-                fetchStatusOnly();
-            } else {
-                fetchStatus();
-            }
+            fetchStatus();
             setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
         }, 10000);
 
@@ -183,19 +151,7 @@ function MetricsGrid() {
         };
     }, []);
 
-    useEffect(() => {
-        if (data.metrics !== null) {
-            setData(prev => ({ ...prev, isFirstFetch: false }));
-        }
-    }, [data.metrics]);
-
-    useEffect(() => {
-        if (data.pcStatus && data.pcStatus.status !== 'Offline') {
-            setData(prev => ({ ...prev, isFirstFetch: false }));
-        }
-    }, [data.pcStatus]);
-
-    if (data.loading || !data.metrics) {
+    if (data.loading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {/* PC Status Placeholder */}
@@ -220,7 +176,20 @@ function MetricsGrid() {
         );
     }
 
-    const statusColor = data.backendAvailable && data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
+    if (!data.backendAvailable) {
+        return (
+            <div className="glass-card rounded-xl p-8 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md">
+                <div className="text-3xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>Offline</div>
+                <div className="text-lg font-semibold text-red-500" style={{ fontFamily: "'Zen Dots', cursive" }}>Backend Offline</div>
+                <div className="text-sm text-[var(--text)] mt-2">{data.currentTime}</div>
+                <div className="w-full">
+                    <PowerControls />
+                </div>
+            </div>
+        );
+    }
+
+    const statusColor = data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -238,24 +207,20 @@ function MetricsGrid() {
                     <div className="text-sm text-[var(--text)] mt-2">
                         {data.currentTime}
                     </div>
-                    {data.backendAvailable && (
-                        <div className="text-sm text-[var(--text)] mt-1">
-                            Uptime: {data.metrics?.uptime || 'Unknown'}
-                        </div>
-                    )}
+                    <div className="text-sm text-[var(--text)] mt-1">
+                        Uptime: {data.metrics?.uptime || 'Unknown'}
+                    </div>
                 </div>
                 <div className="w-full">
                     <PowerControls />
                 </div>
             </div>
 
-            {data.backendAvailable && (
-                <ChartsView
-                    metrics={data.metrics}
-                    memoryTotal={data.memoryTotal}
-                    history={data.history}
-                />
-            )}
+            <ChartsView
+                metrics={data.metrics}
+                memoryTotal={data.memoryTotal}
+                history={data.history}
+            />
 
         </div>
     );

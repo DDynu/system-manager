@@ -1,12 +1,12 @@
 import { useState, useCallback, memo } from 'react';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
 const PowerButton = memo(({ label, loading, onAction }) => (
     <button
         onClick={onAction}
         disabled={loading}
-        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2 sm:px-6 sm:py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 disabled:bg-gray-700 text-white font-bold rounded-lg border-b-4 border-[var(--accent)]/60 hover:border-[var(--accent)]/80 hover:scale-105 active:border-b-0 active:scale-95 active:mt-1 transition-all touch-manipulation"
+        className="flex-1 min-w-[100px] sm:min-w-auto px-4 py-2.5 sm:px-6 sm:py-3 glass-card rounded-xl text-white font-semibold text-sm tracking-wide hover:bg-[var(--accent)]/25 hover:border-[var(--accent)]/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-[var(--border)]/20 transition-all duration-200 touch-manipulation active:scale-[0.97]"
     >
         {loading ? 'Processing...' : label}
     </button>

@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
 @import "tailwindcss";
 
@@ -15,9 +16,9 @@
   --social-bg: rgba(51, 65, 85, 0.5);
   --shadow: rgba(0, 0, 0, 0.4) 0 8px 16px -2px;
 
-  --sans: 'Montserrat', system-ui, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: 'Montserrat', ui-monospace, Consolas, monospace;
+  --sans: 'Prompt', system-ui, sans-serif;
+  --heading: 'Righteous', system-ui, sans-serif;
+  --mono: 'Prompt', ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -59,13 +60,9 @@ body {
 }
 
 #root {
-  width: 100%;
-  min-height: 100svh;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
+  background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)),
+              image-set(url('/bg.avif') type('image/avif') 1x,
+                        url('/bg.jpg') type('image/jpeg') 1x);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -93,7 +90,7 @@ h2 {
 }
 
 h1 {
-  font-family: "Bitcount Grid Double", system-ui;
+  font-family: 'Righteous', system-ui;
   font-weight: 700;
   font-size: 72px;
   letter-spacing: -2.16px;
