@@ -1,6 +1,6 @@
 import { useState, useCallback, memo } from 'react';
 
-const API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
+const API_URL = `${import.meta.env.VITE_POWER_API_URL}/api`;
 
 const PowerButton = memo(({ label, loading, onAction }) => (
     <button
