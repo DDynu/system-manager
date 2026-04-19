@@ -19,8 +19,12 @@ system-manager/
 │   │   ├── main.py        - FastAPI metrics server (port 8000)
 │   │   └── start.sh       - Start script
 │   └── power/
-│       ├── power.py       - FastAPI power control server (port 8001)
-│       └── start.sh       - Start script
+│       ├── app.py         - FastAPI entrypoint (port 8001)
+│       ├── power.py       - Power control endpoints
+│       ├── ssh.py         - SSH execution layer
+│       ├── config.py      - .env parser
+│       ├── .env           - SSH target config (not committed)
+│       ├── start.sh       - Start script
 ├── frontend/
 │   ├── .env               - VITE_METRICS_API_URL config
 │   ├── public/
@@ -94,33 +98,25 @@ app.add_middleware(
 }
 ```
 
-### Power Server (`backend/power/power.py`)
+### Power Server (`backend/power/app.py`, `power.py`, `ssh.py`, `config.py`)
 
-FastAPI app for remote power control:
-- `POST /api/power/shutdown` - Shutdown system (requires `confirm: true`)
-- `POST /api/power/reboot` - Reboot system (requires `confirm: true`)
-- `POST /api/power/sleep` - Suspend system
-- `POST /api/power/wake?mac_address=XX:XX:XX:XX:XX:XX` - Wake on LAN
+FastAPI app for remote power control via SSH:
+- `POST /api/power/shutdown` - Shutdown target (requires `confirm: true`)
+- `POST /api/power/reboot` - Reboot target (requires `confirm: true`)
+- `POST /api/power/sleep` - Suspend target (tries systemctl, falls back to pm-suspend)
+- `POST /api/power/wake` - Wake-on-LAN broadcast
+- `GET /api/power/status` - Check target reachability via SSH
 
-**Request Model:**
-```json
-{
-  "confirm": true
-}
-```
+**Config:** Targets in `.env` file (`TARGETS=host:port:user`, `TARGET_MAC=...`, SSH keys/password, timeout, retries)
 
-**Response:**
-```json
-{
-  "message": "Shutdown initiated"
-}
-```
+**SSH Execution:** paramiko library, new connection per command, retry on timeout, key or password auth
 
 **Implementation:**
-- Shutdown: `subprocess.run(["shutdown", "-h", "now"])`
-- Reboot: `subprocess.run(["shutdown", "-r", "now"])`
-- Sleep: Tries `systemctl suspend`, falls back to `pm-suspend`
-- Wake: `subprocess.run(["wakeonlan", mac_address])`
+- `config.py`: Parses .env, returns target dict and SSH settings
+- `ssh.py`: `connect_ssh()` with retry logic, `execute_command()` returns {success, stdout, stderr, exit_code}
+- `power.py`: Endpoints call `execute_command()` via SSH, return error details on failure
+- `wake`: Uses `wakeonlan` CLI (no SSH needed), MAC from TARGET_MAC env var
+- Error responses: 400 (no confirm), 401 (auth fail), 503 (connection fail), 500 (command fail)
 
 ## Frontend Components
 
@@ -249,7 +245,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 # backend/power/start.sh
 #!/bin/bash
 source venv/bin/activate
-uvicorn power:power_app --reload --host 0.0.0.0 --port 8001
+uvicorn app:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ## Implementation Status
