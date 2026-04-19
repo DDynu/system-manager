@@ -2,19 +2,27 @@
 
 ## Overview
 
-Rewrite the power backend (port 8001) to SSH into a single target machine as root and execute power commands remotely. The manager server runs the power backend; the target machine is accessed via SSH.
+Power backend runs on a separate controller server (not the target system) and SSHes into the target to execute power commands. The frontend connects to the controller's API; the controller initiates outbound SSH to the target.
 
 ## Architecture
 
 ```
-Power Server (port 8001)
+Frontend ──HTTP──▶ Controller Server (port 8001) ──SSH──▶ Target System
+                                                      (headless, no power API)
+```
+
+- **Controller server**: runs the power backend (FastAPI). Initiates all SSH connections to the target. Exposed to the frontend.
+- **Target system**: headless. No power API installed. Only needs SSH open for inbound connections from the controller.
+
+```
+Controller Server (port 8001)
 ├── app.py              — FastAPI entrypoint, CORS, routers
 ├── config.py           — Parse targets from .env file
 ├── ssh.py              — SSH execution layer (paramiko)
 └── power.py            — Power command endpoints
 ```
 
-Targets configured in `.env`. Single target only — all commands go to that one machine.
+Single target configured in `.env`. All commands go to that one machine.
 
 ## Config (`.env`)
 
@@ -84,8 +92,16 @@ Response: `{ "reachable": true, "hostname": "target-hostname" }` or `{ "reachabl
 - `python-dotenv` (for .env parsing)
 - `wakeonlan` CLI (existing, no SSH)
 
-## Frontend Changes
+## Frontend
 
-- Add `VITE_POWER_API_URL` env var pointing to power server (port 8001)
-- `PowerControls.jsx` uses `VITE_POWER_API_URL` for power endpoints
-- `MetricsGrid.jsx` keeps `VITE_METRICS_API_URL` for metrics
+Frontend connects to the controller server for both metrics and power.
+
+- `VITE_POWER_API_URL` — URL of the controller server (port 8001)
+- `VITE_METRICS_API_URL` — URL of the controller server (port 8000, or same host)
+- `PowerControls.jsx` calls power endpoints on the controller
+- `MetricsGrid.jsx` calls metrics/status endpoints on the controller
+- The target system is never directly accessed by the frontend
+
+## CORS
+
+Controller server allows frontend origins via `CORS_ALLOW_ORIGINS` env var. Default: `http://192.168.100.140:5173,http://localhost:5173`.

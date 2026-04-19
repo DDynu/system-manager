@@ -32,7 +32,7 @@ function ChartShell({ title, subtitle, children }) {
                 {title}
             </div>
             <div className="text-sm text-[var(--text)] text-center mb-4">{subtitle}</div>
-            <ResponsiveContainer width="100%" height={150}>
+            <ResponsiveContainer width="100%" height={250}>
                 {children}
             </ResponsiveContainer>
         </div>
@@ -151,11 +151,13 @@ function MetricsGrid() {
         };
     }, []);
 
+    const isOnline = data.backendAvailable && data.pcStatus.status === 'Online';
+
     if (data.loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Placeholder */}
-                <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 animate-pulse md:h-[172px] lg:h-[193px] backdrop-blur-md">
+                <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
                     <div className="text-center">
                         <div className="h-8 bg-[var(--border)] rounded mb-2 w-48 mx-auto" />
                         <div className="h-6 bg-[var(--border)] rounded w-24 mx-auto mb-4" />
@@ -166,50 +168,67 @@ function MetricsGrid() {
 
                 {/* Metric Card Placeholders */}
                 {[...Array(3)].map((_, i) => (
-                    <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[274px] lg:h-[289px] backdrop-blur-md">
+                    <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[374px] lg:h-[389px] backdrop-blur-md">
                         <div className="h-8 bg-[var(--border)] rounded w-24 mb-2" />
                         <div className="h-4 bg-[var(--border)] rounded w-20 mb-4" />
-                        <div className="h-[150px] bg-[var(--border)] rounded" />
+                        <div className="h-[250px] bg-[var(--border)] rounded" />
                     </div>
                 ))}
             </div>
         );
     }
 
-    if (!data.backendAvailable) {
-        return (
+    const content = data.loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+            {/* PC Status Placeholder */}
+            <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
+                <div className="text-center">
+                    <div className="h-8 bg-[var(--border)] rounded mb-2 w-48 mx-auto" />
+                    <div className="h-6 bg-[var(--border)] rounded w-24 mx-auto mb-4" />
+                    <div className="h-4 bg-[var(--border)] rounded w-40 mx-auto mb-2" />
+                    <div className="h-4 bg-[var(--border)] rounded w-28 mx-auto" />
+                </div>
+            </div>
+
+            {/* Metric Card Placeholders */}
+            {[...Array(3)].map((_, i) => (
+                <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[374px] lg:h-[389px] backdrop-blur-md">
+                    <div className="h-8 bg-[var(--border)] rounded w-24 mb-2" />
+                    <div className="h-4 bg-[var(--border)] rounded w-20 mb-4" />
+                    <div className="h-[250px] bg-[var(--border)] rounded" />
+                </div>
+            ))}
+        </div>
+    ) : !data.backendAvailable ? (
+        <div className="grid grid-cols-1 gap-6 pb-20">
             <div className="glass-card rounded-xl p-8 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md">
                 <div className="text-3xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>Offline</div>
-                <div className="text-lg font-semibold text-red-500" style={{ fontFamily: "'Zen Dots', cursive" }}>Backend Offline</div>
+                <div className="text-lg font-semibold" style={{ fontFamily: "'Zen Dots', cursive" }}>
+                    <span className="status-dot offline" /> Backend Offline
+                </div>
                 <div className="text-sm text-[var(--text)] mt-2">{data.currentTime}</div>
-                <PowerControls />
             </div>
-        );
-    }
-
-    const statusColor = data.pcStatus.status === 'Online' ? 'text-green-500' : 'text-red-500';
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        </div>
+    ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
             {/* PC Status Card */}
             <div
-                className="glass-card rounded-xl p-6 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md"
+                className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md"
             >
-                <div className="text-center">
-                    <div className="text-3xl font-bold text-[var(--text-h)] mb-1" style={{ fontFamily: "'Zen Dots', cursive" }}>
-                        {data.pcStatus.hostname || 'Unknown'}
-                    </div>
-                    <div className={`text-lg font-semibold ${statusColor}`} style={{ fontFamily: "'Zen Dots', cursive" }}>
-                        {data.pcStatus.status}
-                    </div>
-                    <div className="text-sm text-[var(--text)] mt-2">
-                        {data.currentTime}
-                    </div>
-                    <div className="text-sm text-[var(--text)] mt-1">
-                        Uptime: {data.metrics?.uptime || 'Unknown'}
+                <div className="flex items-center gap-4">
+                    <span className={`status-dot ${isOnline ? 'online' : 'offline'}`} />
+                    <div>
+                        <div className="text-xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>
+                            {data.pcStatus.hostname || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-[var(--text)]">
+                            {data.pcStatus.status} · Uptime: {data.metrics?.uptime || 'Unknown'}
+                        </div>
                     </div>
                 </div>
-                <PowerControls />
+                <div className="text-sm text-[var(--text)] tabular-nums">
+                    {data.currentTime}
+                </div>
             </div>
 
             <ChartsView
@@ -218,6 +237,15 @@ function MetricsGrid() {
                 history={data.history}
             />
 
+        </div>
+    );
+
+    return (
+        <div className="relative">
+            {content}
+            <div className="power-bar">
+                <PowerControls />
+            </div>
         </div>
     );
 }
