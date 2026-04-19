@@ -223,7 +223,7 @@ VITE_POWER_API_URL=http://192.168.100.140:8001
 
 ### App.jsx
 - Renders `<Layout>` → `<main>` → `<MetricsGrid />`
-- **PowerControls removed** from App.jsx (moved inside MetricsGrid PC Status card)
+- **PowerControls** embedded inside MetricsGrid PC Status card
 
 ### CSS (`frontend/src/index.css`)
 - `#root`: full-screen width, `min-height: 100svh`, flex column, centered, scenery background (local AVIF + JPEG fallback via `image-set()`, dark gradient overlay)
