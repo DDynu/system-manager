@@ -8,7 +8,7 @@ Two backend servers:
 
 Frontend React app (port 5173) connects to both servers.
 
-**Note:** PowerControls uses `VITE_METRICS_API_URL` env var. Power server (port 8001) not wired to frontend in current code.
+**Note:** PowerControls uses `VITE_POWER_API_URL` env var pointing to power server on port 8001.
 
 ## Project Structure
 
@@ -123,6 +123,7 @@ FastAPI app for remote power control via SSH:
 ### Layout (`frontend/src/components/Layout.jsx`)
 - Full-screen scenery background (local AVIF + JPEG fallback, dark overlay) — on `#root` in CSS
 - Tailwind classes: `min-h-screen p-6`, `w-full mx-auto max-w-3xl lg:max-w-[1200px]`
+- Centered title with `text-center` class on h1
 - Single page layout
 
 ### MetricsGrid (`frontend/src/components/MetricsGrid.jsx`)
@@ -167,7 +168,7 @@ FastAPI app for remote power control via SSH:
 - Active: smooth scale-down (`active:scale-[0.97]`)
 - **Refactored:** Extracted `PowerButton` memo component with `min-w-[100px]` responsive sizing
 - **API calls:**
-  - Uses `VITE_METRICS_API_URL` env var (consistent with MetricsGrid)
+  - Uses `VITE_POWER_API_URL` env var for power server (port 8001)
   - POST to `/api/power/shutdown` with `{confirm: true}`
   - POST to `/api/power/reboot` with `{confirm: true}`
   - POST to `/api/power/sleep`
@@ -213,6 +214,7 @@ FastAPI app for remote power control via SSH:
 ```bash
 # frontend/.env
 VITE_METRICS_API_URL=http://192.168.100.140:8000
+VITE_POWER_API_URL=http://192.168.100.140:8001
 ```
 
 ### Vite Config (`frontend/vite.config.js`)
@@ -244,7 +246,9 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 # backend/power/start.sh
 #!/bin/bash
-source venv/bin/activate
+cd /home/suponer/Documents/Codes/AICodes/system-manager/backend/power/
+source ../venv/bin/activate
+export PYTHONPATH=/home/suponer/Documents/Codes/AICodes/system-manager:$PYTHONPATH
 uvicorn app:app --reload --host 0.0.0.0 --port 8001
 ```
 
