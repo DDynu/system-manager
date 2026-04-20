@@ -23,25 +23,15 @@ app.add_middleware(
 class Metrics(BaseModel):
     cpu: int
     memory: dict
-    disk: dict
+    # disk: dict
     uptime: str
-    temperature: float 
+    # temperature: float | None
     network: dict
 
 
 class Status(BaseModel):
     hostname: str
     status: str
-
-
-def get_size(bytes):
-    """
-    Returns size of bytes in a nice format
-    """
-    for unit in ['', 'K', 'M', 'G', 'T', 'P']:
-        if bytes < 1024:
-            return f"{bytes:.2f}{unit}B"
-        bytes /= 1024
 
 def get_uptime():
     boot_time = psutil.boot_time()
@@ -53,32 +43,30 @@ def get_uptime():
     minutes, _ = divmod(remainder, 60)
     return f"{days}d {hours}h {minutes}m"
 
-
-def get_temperature():
-    try:
-        temps = psutil.sensors_temperatures()
-        if temps.get("k10temp"):
-            # Get first available sensor
-            return temps.get("k10temp")[0].current
-    except Exception:
-        pass
-    return None
+#
+# def get_temperature():
+#     try:
+#         temps = psutil.sensors_temperatures()
+#         if temps.get("k10temp"):
+#             # Get first available sensor
+#             return temps.get("k10temp")[0].current
+#     except Exception:
+#         pass
+#     return None
 
 
 def get_network_io():
-    io1 = psutil.net_io_counters()
-    time.sleep(1)
-    io_2 = psutil.net_io_counters()
-    up_speed , down_speed = io_2.bytes_sent - io1.bytes_sent, io_2.bytes_recv - io1.bytes_recv
+    io = psutil.net_io_counters()
+    # up_speed , down_speed = io_2.bytes_sent - io1.bytes_sent, io_2.bytes_recv - io1.bytes_recv
     return {
-        "rx": down_speed,
-        "tx": up_speed
+        "rx": io.bytes_recv,
+        "tx": io.bytes_sent 
     }
 
 
 @app.get("/api/metrics", response_model=Metrics)
 def get_metrics():
-    cpu = int(psutil.cpu_percent(interval=1))
+    cpu = int(psutil.cpu_percent(interval=None))
 
     mem = psutil.virtual_memory()
     memory = {
@@ -87,21 +75,21 @@ def get_metrics():
         "percent": mem.percent
     }
 
-    disk = psutil.disk_usage("/")
-    disk_info = {
-        "used": round(disk.used / (1024 ** 3), 0),
-        "total": round(disk.total / (1024 ** 3), 0),
-        "percent": disk.percent
-    }
+    # disk = psutil.disk_usage("/")
+    # disk_info = {
+    #     "used": round(disk.used / (1024 ** 3), 0),
+    #     "total": round(disk.total / (1024 ** 3), 0),
+    #     "percent": disk.percent
+    # }
 
     network = get_network_io()
 
     return Metrics(
         cpu=cpu,
         memory=memory,
-        disk=disk_info,
+        # disk=disk_info,
         uptime=get_uptime(),
-        temperature=get_temperature(),
+        # temperature=get_temperature(),
         network=network
     )
 
