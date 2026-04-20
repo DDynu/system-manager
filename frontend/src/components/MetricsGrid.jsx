@@ -159,10 +159,10 @@ function MetricsGrid() {
                 {/* PC Status Placeholder */}
                 <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
                     <div className="text-center">
-                        <div className="h-8 bg-[var(--border)] rounded mb-2 w-48 mx-auto" />
-                        <div className="h-6 bg-[var(--border)] rounded w-24 mx-auto mb-4" />
-                        <div className="h-4 bg-[var(--border)] rounded w-40 mx-auto mb-2" />
-                        <div className="h-4 bg-[var(--border)] rounded w-28 mx-auto" />
+                        <div className="h-8 bg-(--border) rounded mb-2 w-48 mx-auto" />
+                        <div className="h-6 bg-(--border) rounded w-24 mx-auto mb-4" />
+                        <div className="h-4 bg-(--border) rounded w-40 mx-auto mb-2" />
+                        <div className="h-4 bg-(--border) rounded w-28 mx-auto" />
                     </div>
                 </div>
 
@@ -183,10 +183,10 @@ function MetricsGrid() {
             {/* PC Status Placeholder */}
             <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
                 <div className="text-center">
-                    <div className="h-8 bg-[var(--border)] rounded mb-2 w-48 mx-auto" />
-                    <div className="h-6 bg-[var(--border)] rounded w-24 mx-auto mb-4" />
-                    <div className="h-4 bg-[var(--border)] rounded w-40 mx-auto mb-2" />
-                    <div className="h-4 bg-[var(--border)] rounded w-28 mx-auto" />
+                    <div className="h-8 bg-(--border) rounded mb-2 w-48 mx-auto" />
+                    <div className="h-6 bg-(--border) rounded w-24 mx-auto mb-4" />
+                    <div className="h-4 bg-(--border) rounded w-40 mx-auto mb-2" />
+                    <div className="h-4 bg-(--border) rounded w-28 mx-auto" />
                 </div>
             </div>
 
