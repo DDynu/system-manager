@@ -165,5 +165,6 @@ code {
   display: flex;
   justify-content: center;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
