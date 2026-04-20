@@ -95,6 +95,7 @@ function MetricsGrid() {
         loading: true,
         currentTime: new Date().toLocaleTimeString()
     });
+    const [time, setTime] = useState(new Date().toLocaleTimeString());
     const backendRef = useRef(false);
 
     useEffect(() => {
@@ -135,19 +136,25 @@ function MetricsGrid() {
             }
         };
 
-        fetchMetrics();
         fetchStatus();
+        if (backendRef.current) {
+            fetchMetrics();
+        }
         setData(prev => ({ ...prev, loading: false }));
 
+        const timeInterval = setInterval(() => {
+            setTime(new Date().toLocaleTimeString());
+        }, 1000);
         const metricsInterval = setInterval(fetchMetrics, 5000);
         const statusInterval = setInterval(() => {
             fetchStatus();
-            setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
+            // setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
         }, 10000);
 
         return () => {
             clearInterval(metricsInterval);
             clearInterval(statusInterval);
+            clearInterval(timeInterval);
         };
     }, []);
 
@@ -206,7 +213,7 @@ function MetricsGrid() {
                 <div className="text-lg font-semibold" style={{ fontFamily: "'Zen Dots', cursive" }}>
                     <span className="status-dot offline" /> Backend Offline
                 </div>
-                <div className="text-sm text-[var(--text)] mt-2">{data.currentTime}</div>
+                <div className="text-sm text-[var(--text)] mt-2">{time}</div>
             </div>
         </div>
     ) : (
@@ -227,7 +234,7 @@ function MetricsGrid() {
                     </div>
                 </div>
                 <div className="text-sm text-[var(--text)] tabular-nums">
-                    {data.currentTime}
+                    {time}
                 </div>
             </div>
 
@@ -243,9 +250,6 @@ function MetricsGrid() {
     return (
         <div className="relative">
             {content}
-            <div className="power-bar">
-                <PowerControls />
-            </div>
         </div>
     );
 }

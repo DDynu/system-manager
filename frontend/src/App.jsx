@@ -1,14 +1,18 @@
 import Layout from './components/Layout'
 import MetricsGrid from './components/MetricsGrid'
+import PowerControls from './components/PowerControls'
 
 function App() {
-  return (
-    <Layout>
-      <main className="main-content">
-        <MetricsGrid />
-      </main>
-    </Layout>
-  )
+    return (
+        <Layout>
+            <main className="main-content">
+                <MetricsGrid />
+                <div className="power-bar">
+                    <PowerControls />
+                </div>
+            </main>
+        </Layout>
+    )
 }
 
 export default App
