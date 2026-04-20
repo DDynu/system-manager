@@ -13,8 +13,13 @@ function MetricsGrid() {
         loading: true,
         currentTime: new Date().toLocaleTimeString()
     });
+    const [network, setNetwork] = useState({rx: 0, tx: 0});
+
     const [time, setTime] = useState(new Date().toLocaleTimeString());
     const backendRef = useRef(false);
+    const calculateNetworkSpeed = () => {
+        
+    }
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -63,7 +68,7 @@ function MetricsGrid() {
         const timeInterval = setInterval(() => {
             setTime(new Date().toLocaleTimeString());
         }, 1000);
-        const metricsInterval = setInterval(fetchMetrics, 5000);
+        const metricsInterval = setInterval(fetchMetrics, 1000);
         const statusInterval = setInterval(() => {
             fetchStatus();
             // setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
