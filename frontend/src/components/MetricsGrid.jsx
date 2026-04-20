@@ -8,7 +8,6 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import PowerControls from './PowerControls';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
