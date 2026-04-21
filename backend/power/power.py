@@ -1,9 +1,15 @@
 import subprocess
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from backend.power.config import get_target, get_target_mac, get_ssh_timeout, get_ssh_retries, get_ssh_key_path, get_ssh_password
 from backend.power.ssh import execute_command
+
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    load_dotenv(_env_path)
 
 power_app = FastAPI(title="Power Control API")
 
@@ -12,15 +18,28 @@ class PowerCommand(BaseModel):
     confirm: bool = False
 
 
+def get_target():
+    targets = os.getenv("TARGETS", "")
+    if not targets:
+        raise ValueError("TARGETS not set in .env")
+    parts = targets.split(":")
+    if len(parts) != 3:
+        raise ValueError(f"TARGETS format must be host:port:user, got '{targets}'")
+    return {
+        "host": parts[0],
+        "port": int(parts[1]),
+        "user": parts[2],
+    }
+
 def _ssh_kwargs():
     """Build kwargs dict for execute_command from config."""
     target = get_target()
     return {
         **target,
-        "key_path": get_ssh_key_path(),
-        "password": get_ssh_password(),
-        "timeout": get_ssh_timeout(),
-        "retries": get_ssh_retries(),
+        "key_path": os.getenv("SSH_KEY_PATH", ""),
+        "password": os.getenv("SSH_PASSWORD", ""),
+        "timeout": os.getenv("SSH_TIMEOUT", "10"),
+        "retries": os.getenv("SSH_PASSWORD", "2"),
     }
 
 
@@ -61,7 +80,7 @@ def sleep():
 
 @power_app.post("/api/power/wake")
 def wake():
-    mac = get_target_mac()
+    mac = os.getenv("TARGET_MAC", "")
     if not mac:
         raise HTTPException(status_code=400, detail="TARGET_MAC not configured")
     try:
