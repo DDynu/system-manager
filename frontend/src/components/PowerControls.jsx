@@ -19,8 +19,6 @@ function PowerControls() {
             return;
         }
 
-        setLoading(true);
-        setError(null);
 
         try {
             const response = await fetch(`${API_URL}/power/${action}`, {

@@ -10,7 +10,7 @@ allow_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://192.168.100.140:5173,htt
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins="*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
