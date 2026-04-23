@@ -12,10 +12,11 @@ const PowerButton = ({ label, onAction }) => (
     </button>
 );
 
-function PowerControls({action, setAction}) {
-    const [error, setError] = useState(null);
+function PowerControls({action, setAction, error, setError}) {
+    // const [error, setError] = useState(null);
 
     const handleAction = async () => {
+        console.log(action);
 
         try {
             const response = await fetch(`${API_URL}/power/${action}`, {
@@ -42,7 +43,7 @@ function PowerControls({action, setAction}) {
             <PowerButton label="Shutdown" onAction={() => {setAction("shutdown"); handleAction()}} />
             <PowerButton label="Reboot" onAction={() => handleAction('reboot')} />
             <PowerButton label="Sleep" onAction={() => handleAction('sleep')} />
-            <PowerButton label="Wake" onAction={() => {setAction('wake'); handleAction()}} />
+            <PowerButton label="Wake" onAction={() => setAction('wake')} />
 
             {error && (
                 <div className="w-full text-center text-red-400 text-sm mt-3">
