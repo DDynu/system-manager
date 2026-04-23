@@ -1,4 +1,5 @@
-import { useState, useCallback, memo } from 'react';
+import { useState } from 'react';
+import ConfirmPopup from './ConfirmPopup';
 
 const API_URL = `${import.meta.env.VITE_POWER_API_URL}/api`;
 
@@ -11,14 +12,10 @@ const PowerButton = ({ label, onAction }) => (
     </button>
 );
 
-function PowerControls() {
+function PowerControls({action, setAction}) {
     const [error, setError] = useState(null);
 
-    const handleAction = async (action) => {
-        if (!confirm(`Are you sure you want to ${action} this system?`)) {
-            return;
-        }
-
+    const handleAction = async () => {
 
         try {
             const response = await fetch(`${API_URL}/power/${action}`, {
@@ -32,27 +29,20 @@ function PowerControls() {
             if (!response.ok) {
                 throw new Error(data.detail || `Failed to ${action}`);
             }
-
-            alert(data.message);
         } catch (err) {
             setError(err.message);
-            alert(`Error: ${err.message}`);
-        } finally {
-            setLoading(false);
-        }
+        } 
+        // finally {
+        //     setLoading(false);
+        // }
     };
-
-    // const handleShutdown = handleAction('shutdown');
-    // const handleReboot = useCallback(() => handleAction('reboot'), [handleAction]);
-    // const handleSleep = useCallback(() => handleAction('sleep'), [handleAction]);
-    // const handleWake = useCallback(() => handleAction('wake'), [handleAction]);
 
     return (
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-2 power-bar">
-            <PowerButton label="Shutdown" onAction={() => handleAction('shutdown')} />
+            <PowerButton label="Shutdown" onAction={() => {setAction("shutdown"); handleAction()}} />
             <PowerButton label="Reboot" onAction={() => handleAction('reboot')} />
             <PowerButton label="Sleep" onAction={() => handleAction('sleep')} />
-            <PowerButton label="Wake" onAction={() => handleAction('wake')} />
+            <PowerButton label="Wake" onAction={() => {setAction('wake'); handleAction()}} />
 
             {error && (
                 <div className="w-full text-center text-red-400 text-sm mt-3">
