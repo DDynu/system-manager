@@ -1,8 +1,3 @@
-import { useState } from 'react';
-import ConfirmPopup from './ConfirmPopup';
-
-const API_URL = `${import.meta.env.VITE_POWER_API_URL}/api`;
-
 const PowerButton = ({ label, onAction }) => (
     <button
         onClick={onAction}
@@ -12,38 +7,15 @@ const PowerButton = ({ label, onAction }) => (
     </button>
 );
 
-function PowerControls({action, setAction, error, setError}) {
+function PowerControls({setAction, error}) {
     // const [error, setError] = useState(null);
-
-    const handleAction = async () => {
-        console.log(action);
-
-        try {
-            const response = await fetch(`${API_URL}/power/${action}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ confirm: true })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.detail || `Failed to ${action}`);
-            }
-        } catch (err) {
-            setError(err.message);
-        } 
-        // finally {
-        //     setLoading(false);
-        // }
-    };
 
     return (
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-2 power-bar">
-            <PowerButton label="Shutdown" onAction={() => {setAction("shutdown"); handleAction()}} />
-            <PowerButton label="Reboot" onAction={() => handleAction('reboot')} />
-            <PowerButton label="Sleep" onAction={() => handleAction('sleep')} />
-            <PowerButton label="Wake" onAction={() => setAction('wake')} />
+            <PowerButton label="Shutdown" onAction={() => setAction("shutdown")} />
+            <PowerButton label="Reboot" onAction={() => setAction("reboot")} />
+            <PowerButton label="Sleep" onAction={() => setAction("sleep")} />
+            <PowerButton label="Wake" onAction={() => setAction("wake")} />
 
             {error && (
                 <div className="w-full text-center text-red-400 text-sm mt-3">

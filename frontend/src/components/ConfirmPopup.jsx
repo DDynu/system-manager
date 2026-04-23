@@ -21,6 +21,11 @@ export default function ConfirmPopup({ action, setAction, setError }) {
             setError(null);
         }
     };
+    // Skip popup for wake commands
+    if (action === "wake") {
+        handleAction();
+    }
+    else 
     return (
         <div className="fixed top-0 right-0 z-100 w-screen h-screen bg-black/30 backdrop-blur-md flex justify-center items-center font-[Zen_Dots]">
             <section className="bg-white/10 text-white text-center flex flex-wrap justify-around rounded-3xl border-2 border-gray-500">
