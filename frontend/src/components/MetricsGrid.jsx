@@ -53,7 +53,7 @@ function MetricsGrid({ loading, setLoading }) {
                 });
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
-                setData(prev => ({ ...prev, backendAvailable: false }));
+                backendRef.current = false;
                 fetchStatus(); // fetch to change offline status
             }
         };
@@ -64,11 +64,12 @@ function MetricsGrid({ loading, setLoading }) {
                 const statusData = await statusRes.json();
                 backendRef.current = true;
                 setLoading(false);
-                setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
+                setData(prev => ({ ...prev, pcStatus: statusData,}));
+                backendRef.current = true;
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
+                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }}));
             }
         };
 
