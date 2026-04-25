@@ -53,16 +53,16 @@ export default function ChartsView({ metrics, memoryTotal, history }) {
             </ChartShell>
 
             <ChartShell
-                title={`${formatBytes(metrics?.network?.rx ?? 0)} / ${formatBytes(metrics?.network?.tx ?? 0)}`}
+                title={`${formatBytes(history[history.length - 1]?.rxSpeed ?? 0)}/s / ${formatBytes(history[history.length - 1]?.txSpeed ?? 0)}/s`}
                 subtitle="Network"
             >
                 <AreaChart data={history}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                    <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={formatBytes} />
+                    <YAxis stroke="var(--text)" fontSize={10} domain={[0, 'dataMax + 100']} tickFormatter={(value) => `${formatBytes(value)}/s`} />
                     <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '2px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }} formatter={(value) => formatBytes(value)} />
-                    <Area type="monotone" dataKey="rx" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Download" />
-                    <Area type="monotone" dataKey="tx" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
+                    <Area type="monotone" dataKey="rxSpeed" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Download" />
+                    <Area type="monotone" dataKey="txSpeed" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
                 </AreaChart>
             </ChartShell>
         </>

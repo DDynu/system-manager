@@ -4,6 +4,8 @@ import StatusCard from './StatusCard';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
+const FETCH_API_INTERVAL = 1000;
+
 function MetricsGrid({ loading, setLoading }) {
     const [data, setData] = useState({
         metrics: null,
@@ -22,18 +24,33 @@ function MetricsGrid({ loading, setLoading }) {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString();
-                setData(prev => ({
-                    ...prev,
-                    metrics: metricsData,
-                    memoryTotal: metricsData.memory.total,
-                    history: [...prev.history, {
-                        time: timeLabel,
-                        cpu: metricsData.cpu,
-                        memory: metricsData.memory.used,
-                        rx: metricsData.network.rx,
-                        tx: metricsData.network.tx
-                    }].slice(-20),
-                }));
+                setData(prev => {
+                    const lastEntry = prev.history[prev.history.length - 1];
+                    let rxSpeed = 0;
+                    let txSpeed = 0;
+                    if (lastEntry) {
+                        const timeDelta = 1;
+                        if (timeDelta > 0) {
+                            rxSpeed = (metricsData.network.rx - lastEntry.rx) / timeDelta;
+                            txSpeed = (metricsData.network.tx - lastEntry.tx) / timeDelta;
+                        }
+                    }
+
+                    return {
+                        ...prev,
+                        metrics: metricsData,
+                        memoryTotal: metricsData.memory.total,
+                        history: [...prev.history, {
+                            time: timeLabel,
+                            cpu: metricsData.cpu,
+                            memory: metricsData.memory.used,
+                            rx: metricsData.network.rx,
+                            tx: metricsData.network.tx,
+                            rxSpeed,
+                            txSpeed,
+                        }].slice(-20),
+                    }
+                });
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
                 setData(prev => ({ ...prev, backendAvailable: false }));
@@ -65,7 +82,7 @@ function MetricsGrid({ loading, setLoading }) {
             if (backendRef.current) {
                 fetchMetrics();
             }
-        }, 5000);
+        }, FETCH_API_INTERVAL);
         fetchStatus();
         setData(prev => ({ ...prev, loading: false }));
 
@@ -107,6 +124,7 @@ function MetricsGrid({ loading, setLoading }) {
         )
     }
     else {
+        console.log(data.history);
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}
