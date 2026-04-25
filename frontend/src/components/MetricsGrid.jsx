@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ChartsView from './ChartsView';
 import StatusCard from './StatusCard';
 
@@ -48,7 +48,7 @@ function MetricsGrid({ loading, setLoading }) {
                             tx: metricsData.network.tx,
                             rxSpeed,
                             txSpeed,
-                        }].slice(-20),
+                        }].slice(-5),
                     }
                 });
             } catch (err) {
@@ -110,9 +110,9 @@ function MetricsGrid({ loading, setLoading }) {
                 {/* Metric Card Placeholders */}
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[374px] lg:h-[389px] backdrop-blur-md">
-                        <div className="h-8 bg-[var(--border)] rounded w-24 mb-2" />
-                        <div className="h-4 bg-[var(--border)] rounded w-20 mb-4" />
-                        <div className="h-[250px] bg-[var(--border)] rounded" />
+                        <div className="h-8 bg-(--border) rounded w-24 mb-2" />
+                        <div className="h-4 bg-(--border) rounded w-20 mb-4" />
+                        <div className="h-[250px] bg-(--border) rounded" />
                     </div>
                 ))}
             </div>
