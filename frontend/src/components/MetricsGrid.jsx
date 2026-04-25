@@ -1,25 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChartsView from './ChartsView';
+import StatusCard from './StatusCard';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
-function MetricsGrid() {
+function MetricsGrid({ loading, setLoading }) {
     const [data, setData] = useState({
         metrics: null,
         history: [],
         memoryTotal: 0,
         pcStatus: { hostname: '', status: 'Offline' },
-        backendAvailable: false,
-        loading: true,
         currentTime: new Date().toLocaleTimeString()
     });
-    const [network, setNetwork] = useState({rx: 0, tx: 0});
 
     const [time, setTime] = useState(new Date().toLocaleTimeString());
     const backendRef = useRef(false);
-    const calculateNetworkSpeed = () => {
-        
-    }
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -27,6 +22,7 @@ function MetricsGrid() {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString();
+                backendRef.current = true;
                 setData(prev => ({
                     ...prev,
                     metrics: metricsData,
@@ -38,11 +34,12 @@ function MetricsGrid() {
                         rx: metricsData.network.rx,
                         tx: metricsData.network.tx
                     }].slice(-20),
-                    backendAvailable: true
                 }));
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
                 setData(prev => ({ ...prev, backendAvailable: false }));
+                backendRef.current = false;
+                fetchStatus(); // fetch to change offline status
             }
         };
 
@@ -56,34 +53,33 @@ function MetricsGrid() {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
+                clearInterval(metricsInterval);
             }
         };
-
-        fetchStatus();
-        if (backendRef.current) {
-            fetchMetrics();
-        }
-        setData(prev => ({ ...prev, loading: false }));
 
         const timeInterval = setInterval(() => {
             setTime(new Date().toLocaleTimeString());
         }, 1000);
-        const metricsInterval = setInterval(fetchMetrics, 1000);
+        // const metricsInterval = setInterval(fetchMetrics, 1000);
         const statusInterval = setInterval(() => {
             fetchStatus();
             // setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
-        }, 10000);
+            if (backendRef.current) {
+                fetchMetrics();
+            }
+        }, 5000);
+        fetchStatus();
+        setData(prev => ({ ...prev, loading: false }));
+
 
         return () => {
-            clearInterval(metricsInterval);
+            // clearInterval(metricsInterval);
             clearInterval(statusInterval);
             clearInterval(timeInterval);
         };
     }, []);
 
-    const isOnline = data.backendAvailable && data.pcStatus.status === 'Online';
-
-    if (data.loading) {
+    if (loading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Placeholder */}
@@ -107,74 +103,26 @@ function MetricsGrid() {
             </div>
         );
     }
+    if (!backendRef.current) {
+        return (
+            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time}/>
+        )
+    } 
+    else {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+                {/* PC Status Card */}
+                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} hostname={data.pcStatus.hostname}/>
 
-    const content = data.loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-            {/* PC Status Placeholder */}
-            <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
-                <div className="text-center">
-                    <div className="h-8 bg-(--border) rounded mb-2 w-48 mx-auto" />
-                    <div className="h-6 bg-(--border) rounded w-24 mx-auto mb-4" />
-                    <div className="h-4 bg-(--border) rounded w-40 mx-auto mb-2" />
-                    <div className="h-4 bg-(--border) rounded w-28 mx-auto" />
-                </div>
+                <ChartsView
+                    metrics={data.metrics}
+                    memoryTotal={data.memoryTotal}
+                    history={data.history}
+                />
+
             </div>
-
-            {/* Metric Card Placeholders */}
-            {[...Array(3)].map((_, i) => (
-                <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[374px] lg:h-[389px] backdrop-blur-md">
-                    <div className="h-8 bg-[var(--border)] rounded w-24 mb-2" />
-                    <div className="h-4 bg-[var(--border)] rounded w-20 mb-4" />
-                    <div className="h-[250px] bg-[var(--border)] rounded" />
-                </div>
-            ))}
-        </div>
-    ) : !data.backendAvailable ? (
-        <div className="grid grid-cols-1 gap-6 pb-20">
-            <div className="glass-card rounded-xl p-8 lg:col-span-3 flex flex-col items-center justify-center gap-4 backdrop-blur-md">
-                <div className="text-3xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>Offline</div>
-                <div className="text-lg font-semibold" style={{ fontFamily: "'Zen Dots', cursive" }}>
-                    <span className="status-dot offline" /> Backend Offline
-                </div>
-                <div className="text-sm text-[var(--text)] mt-2">{time}</div>
-            </div>
-        </div>
-    ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-            {/* PC Status Card */}
-            <div
-                className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md"
-            >
-                <div className="flex items-center gap-4">
-                    <span className={`status-dot ${isOnline ? 'online' : 'offline'}`} />
-                    <div>
-                        <div className="text-xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>
-                            {data.pcStatus.hostname || 'Unknown'}
-                        </div>
-                        <div className="text-sm text-[var(--text)]">
-                            {data.pcStatus.status} · Uptime: {data.metrics?.uptime || 'Unknown'}
-                        </div>
-                    </div>
-                </div>
-                <div className="text-sm text-[var(--text)] tabular-nums">
-                    {time}
-                </div>
-            </div>
-
-            <ChartsView
-                metrics={data.metrics}
-                memoryTotal={data.memoryTotal}
-                history={data.history}
-            />
-
-        </div>
-    );
-
-    return (
-        <div className="relative">
-            {content}
-        </div>
-    );
+        );
+    }
 }
 
 export default MetricsGrid;

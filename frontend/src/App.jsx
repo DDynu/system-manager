@@ -7,10 +7,11 @@ import PowerControls from './components/PowerControls'
 function App() {
     const [action, setAction] = useState("");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
     return (
         <Layout>
             <main className="main-content">
-                <MetricsGrid />
+                <MetricsGrid loading={loading} setLoading={setLoading}/>
                 <PowerControls action={action} setAction={setAction} error={error} setError={setError}/>
             </main>
         {action && <ConfirmPopup action={action} setAction={setAction} setError={setError}/>}
