@@ -14,7 +14,7 @@ function App() {
                 <MetricsGrid loading={loading} setLoading={setLoading}/>
                 <PowerControls action={action} setAction={setAction} error={error} setError={setError}/>
             </main>
-        {action && <ConfirmPopup action={action} setAction={setAction} setError={setError}/>}
+        {action && <ConfirmPopup action={action} setAction={setAction} setError={setError} setLoading={setLoading}/>}
         </Layout>
     )
 }

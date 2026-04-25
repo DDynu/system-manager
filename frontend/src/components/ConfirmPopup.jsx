@@ -1,4 +1,9 @@
-export default function ConfirmPopup({ action, setAction, setError }) {
+import { useEffect } from "react";
+
+export default function ConfirmPopup({ action, setAction, setError, setLoading }) {
+    useEffect(() => {
+        setLoading(true);
+    }, []);
     const API_URL = `${import.meta.env.VITE_POWER_API_URL}/api`;
     const handleAction = async () => {
         try {

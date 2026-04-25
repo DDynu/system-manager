@@ -22,7 +22,6 @@ function MetricsGrid({ loading, setLoading }) {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString();
-                backendRef.current = true;
                 setData(prev => ({
                     ...prev,
                     metrics: metricsData,
@@ -38,7 +37,6 @@ function MetricsGrid({ loading, setLoading }) {
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
                 setData(prev => ({ ...prev, backendAvailable: false }));
-                backendRef.current = false;
                 fetchStatus(); // fetch to change offline status
             }
         };
@@ -48,12 +46,12 @@ function MetricsGrid({ loading, setLoading }) {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
                 backendRef.current = true;
+                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, backendAvailable: true }));
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }, backendAvailable: false }));
-                clearInterval(metricsInterval);
             }
         };
 
@@ -105,14 +103,14 @@ function MetricsGrid({ loading, setLoading }) {
     }
     if (!backendRef.current) {
         return (
-            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time}/>
+            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} />
         )
-    } 
+    }
     else {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}
-                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} hostname={data.pcStatus.hostname}/>
+                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} hostname={data.pcStatus.hostname} />
 
                 <ChartsView
                     metrics={data.metrics}
