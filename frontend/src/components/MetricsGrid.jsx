@@ -4,7 +4,7 @@ import StatusCard from './StatusCard';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
-const FETCH_API_INTERVAL = 1000;
+const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 
 function MetricsGrid({ loading, setLoading }) {
     const [data, setData] = useState({
