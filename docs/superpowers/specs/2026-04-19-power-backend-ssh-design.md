@@ -17,9 +17,8 @@ Frontend ──HTTP──▶ Controller Server (port 8001) ──SSH──▶ Ta
 ```
 Controller Server (port 8001)
 ├── app.py              — FastAPI entrypoint, CORS, routers
-├── config.py           — Parse targets from .env file
-├── ssh.py              — SSH execution layer (paramiko)
-└── power.py            — Power command endpoints
+├── power.py            — Power command endpoints + inline SSH helpers
+└── start.sh            — Uvicorn launcher
 ```
 
 Single target configured in `.env`. All commands go to that one machine.
@@ -58,50 +57,61 @@ Action: SSH `systemctl suspend` (fallback `pm-suspend`)
 Response: `{ "message": "Sleep initiated", "target": "192.168.100.50" }`
 
 ### `POST /api/power/wake`
-Action: WOL broadcast from manager server via `wakeonlan` CLI (no SSH needed)
-Request: MAC address as query param or body
+Action: WOL broadcast from manager server via `wol` CLI (no SSH needed)
+Request: MAC address from TARGET_MAC env var
 Response: `{ "message": "WOL packet sent to XX:XX:XX:XX:XX:XX" }`
 
 ### `GET /api/power/status`
 Action: SSH `echo ok` to check reachability
-Response: `{ "reachable": true, "hostname": "target-hostname" }` or `{ "reachable": false }`
+Response: `{ "reachable": true, "target": "192.168.100.50" }` or `{ "detail": "..." }` on failure
 
-## SSH Execution Layer (`ssh.py`)
+## Inline SSH helpers in `power.py`
 
-- Uses `paramiko` library
-- Loads key from `SSH_KEY_PATH` (or password from `SSH_PASSWORD`)
-- Connects with `SSH_TIMEOUT`, retries `SSH_RETRIES` times
-- Executes command via `exec_command()`, captures stdout/stderr/exit_code
-- Closes connection after each command
+`power.py` contains its own `get_target()` and `execute_command()` functions (not imported from separate modules):
+
+- `get_target()`: Parses `TARGETS` from env, returns `{hostname, port, username}` dict
+- `execute_command(command)`: Creates SSHClient, loads system host keys, connects with 5s timeout, executes command, returns `{success, stdout, target}`. No retry logic, no key/password auth, no stderr in response.
+
+Uses `paramiko.SSHClient` with `load_system_host_keys()`.
 
 ## Error Handling
 
 | Scenario | Status | Response |
 |----------|--------|----------|
-| Connection refused/timeout | 503 | `{"detail": "SSH connection failed: ..."}` |
-| Auth failed | 401 | `{"detail": "SSH authentication failed"}` |
-| Command not found | 500 | `{"detail": "stderr from remote"}` |
-| Non-zero exit code | 500 | `{"detail": "stderr from remote"}` |
-| General exception | 500 | `{"detail": "exception message"}` |
+| SSH exception | 503 | `{"detail": "..."}` |
+| No confirm | 400 | `{"detail": "Confirm required. Set confirm=true."}` |
+| WOL command not found | 500 | `{"detail": "wakeonlan command not found"}` |
 
 ## Dependencies
 
 - `fastapi`
 - `uvicorn`
 - `paramiko`
-- `python-dotenv` (for .env parsing)
-- `wakeonlan` CLI (existing, no SSH)
+- `python-dotenv`
+- `wol` CLI (existing, no SSH)
 
 ## Frontend
 
 Frontend connects to the controller server for both metrics and power.
 
-- `VITE_POWER_API_URL` — URL of the controller server (port 8001)
-- `VITE_METRICS_API_URL` — URL of the controller server (port 8000, or same host)
-- `PowerControls.jsx` calls power endpoints on the controller
-- `MetricsGrid.jsx` calls metrics/status endpoints on the controller
-- The target system is never directly accessed by the frontend
+- `METRICS_API_URL=192.168.100.140` — metrics host (no protocol/port prefix, port inferred)
+- `VITE_POWER_API_URL` — used in ConfirmPopup for power API calls
+- `PowerControls.jsx` — renders 4 buttons (Shutdown, Reboot, Sleep, Wake), passes `action` via `setAction` callback to parent
+- `ConfirmPopup.jsx` — receives pending action, shows confirmation dialog. Skips popup for "wake" (auto-executes). Uses `VITE_POWER_API_URL` env var.
+- `MetricsGrid.jsx` — fetches metrics/status every 5s, shows loading placeholders, renders StatusCard + ChartsView
+- `StatusCard.jsx` — extracted component showing hostname, status, uptime, current time
+
+### Component flow
+
+```
+App
+├── MetricsGrid (loading state, fetches metrics/status)
+│   ├── StatusCard (hostname, status, uptime, time)
+│   └── ChartsView (CPU, memory, network charts)
+├── PowerControls (buttons, error display)
+└── ConfirmPopup (confirmation dialog, skips for wake)
+```
 
 ## CORS
 
-Controller server allows frontend origins via `CORS_ALLOW_ORIGINS` env var. Default: `http://192.168.100.140:5173,http://localhost:5173`.
+Controller server uses `allow_origins="*"` wildcard (env var `CORS_ALLOW_ORIGINS` is read but not applied).
