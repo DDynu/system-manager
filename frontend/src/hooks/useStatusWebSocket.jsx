@@ -10,7 +10,7 @@ export default function useStatusWebSocket(setStatus, onOffline) {
         if (wsRef.current || !isOnlineRef.current) return;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const baseUrl = WS_API_URL.replace(/^https?:\/\//, '');
+        const baseUrl = WS_API_URL.replace(/^https?:\/\//, ''); // replacing the http in env with ws
         const url = `${protocol}//${baseUrl}/ws/status`;
         console.log('WebSocket connecting to:', url, 'origin:', window.location.origin);
         const ws = new WebSocket(url);

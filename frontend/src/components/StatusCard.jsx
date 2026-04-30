@@ -9,9 +9,11 @@ export default function StatusCard({status, uptime, hostname, time}) {
                     <div className="text-xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>
                         {hostname || 'Unknown'}
                     </div>
+        
                     <div className="text-sm text-[var(--text)]">
-                        {status} · Uptime: {uptime || 'Unknown'}
+                        {status} {status === 'Online' && `· Uptime: ${uptime || 'Unknown'}` }
                     </div>
+        
                 </div>
             </div>
             <div className="text-sm text-[var(--text)] tabular-nums">
