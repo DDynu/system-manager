@@ -39,14 +39,14 @@ function MetricsGrid({ loading, setLoading }) {
             try {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
-                const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+                const timeLabel = new Date().toLocaleTimeString(); // time for metrics
                 console.log(timeLabel);
                 setData(prev => {
                     const lastEntry = prev.history[prev.history.length - 1];
                     let rxSpeed = 0;
                     let txSpeed = 0;
                     if (lastEntry) {
-                        const timeDelta = 1;
+                        const timeDelta = FETCH_API_INTERVAL/1000;
                         if (timeDelta > 0) {
                             rxSpeed = (metricsData.network.rx - lastEntry.rx) / timeDelta;
                             txSpeed = (metricsData.network.tx - lastEntry.tx) / timeDelta;
@@ -57,7 +57,6 @@ function MetricsGrid({ loading, setLoading }) {
                         ...prev,
                         metrics: metricsData,
                         memoryTotal: metricsData.memory.total,
-                        time: timeLabel,
                         history: [...prev.history, {
                             time: timeLabel,
                             cpu: metricsData.cpu,
@@ -80,7 +79,7 @@ function MetricsGrid({ loading, setLoading }) {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
-                const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+                const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
                 backendRef.current = true;
                 setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
