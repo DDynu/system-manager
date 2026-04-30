@@ -1,4 +1,4 @@
-export default function StatusCard({status, uptime, hostname}) {
+export default function StatusCard({status, uptime, hostname, time}) {
     return (
         <div
             className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md"
@@ -15,7 +15,7 @@ export default function StatusCard({status, uptime, hostname}) {
                 </div>
             </div>
             <div className="text-sm text-[var(--text)] tabular-nums">
-                {new Date().toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"})}
+                {time}
             </div>
         </div>
     )

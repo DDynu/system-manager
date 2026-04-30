@@ -22,7 +22,7 @@ function MetricsGrid({ loading, setLoading }) {
             try {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
-                const timeLabel = new Date().toLocaleTimeString(new Intl.DateTimeFormat("en", { timeStyle: "short" }));
+                const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
                 console.log(timeLabel);
                 setData(prev => {
                     const lastEntry = prev.history[prev.history.length - 1];
@@ -40,6 +40,7 @@ function MetricsGrid({ loading, setLoading }) {
                         ...prev,
                         metrics: metricsData,
                         memoryTotal: metricsData.memory.total,
+                        time: timeLabel,
                         history: [...prev.history, {
                             time: timeLabel,
                             cpu: metricsData.cpu,
@@ -62,9 +63,10 @@ function MetricsGrid({ loading, setLoading }) {
             try {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
+                const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
                 backendRef.current = true;
                 setLoading(false);
-                setData(prev => ({ ...prev, pcStatus: statusData, }));
+                setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 backendRef.current = true;
             } catch (err) {
                 console.error('Failed to fetch status:', err);
@@ -77,10 +79,10 @@ function MetricsGrid({ loading, setLoading }) {
         fetchMetrics();
 
         // const metricsInterval = setInterval(fetchMetrics, 1000);
-        const statusInterval = setInterval(() => {
-            fetchStatus();
+        const statusInterval = setInterval(async () => {
+            await fetchStatus();
             if (backendRef.current) {
-                fetchMetrics();
+                await fetchMetrics();
             }
         }, FETCH_API_INTERVAL);
         setData(prev => ({ ...prev, loading: false }));
@@ -117,7 +119,7 @@ function MetricsGrid({ loading, setLoading }) {
     }
     if (!backendRef.current) {
         return (
-            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} />
+            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time}/>
         )
     }
     else {
@@ -125,7 +127,7 @@ function MetricsGrid({ loading, setLoading }) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}
-                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} />
+                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time}/>
 
                 <ChartsView
                     metrics={data.metrics}
