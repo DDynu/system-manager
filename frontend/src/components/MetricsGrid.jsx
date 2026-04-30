@@ -15,7 +15,6 @@ function MetricsGrid({ loading, setLoading }) {
         currentTime: new Date().toLocaleTimeString()
     });
 
-    const [time, setTime] = useState(new Date().toLocaleTimeString());
     const backendRef = useRef(false);
 
     useEffect(() => {
@@ -23,7 +22,8 @@ function MetricsGrid({ loading, setLoading }) {
             try {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
-                const timeLabel = new Date().toLocaleTimeString();
+                const timeLabel = new Date().toLocaleTimeString(new Intl.DateTimeFormat("en", { timeStyle: "short" }));
+                console.log(timeLabel);
                 setData(prev => {
                     const lastEntry = prev.history[prev.history.length - 1];
                     let rxSpeed = 0;
@@ -64,34 +64,30 @@ function MetricsGrid({ loading, setLoading }) {
                 const statusData = await statusRes.json();
                 backendRef.current = true;
                 setLoading(false);
-                setData(prev => ({ ...prev, pcStatus: statusData,}));
+                setData(prev => ({ ...prev, pcStatus: statusData, }));
                 backendRef.current = true;
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' }}));
+                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
             }
         };
 
-        const timeInterval = setInterval(() => {
-            setTime(new Date().toLocaleTimeString());
-        }, 1000);
+        fetchStatus();
+        fetchMetrics();
+
         // const metricsInterval = setInterval(fetchMetrics, 1000);
         const statusInterval = setInterval(() => {
             fetchStatus();
-            // setData(prev => ({ ...prev, currentTime: new Date().toLocaleTimeString() }));
             if (backendRef.current) {
                 fetchMetrics();
             }
         }, FETCH_API_INTERVAL);
-        fetchStatus();
         setData(prev => ({ ...prev, loading: false }));
 
 
         return () => {
-            // clearInterval(metricsInterval);
             clearInterval(statusInterval);
-            clearInterval(timeInterval);
         };
     }, []);
 
@@ -121,7 +117,7 @@ function MetricsGrid({ loading, setLoading }) {
     }
     if (!backendRef.current) {
         return (
-            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} />
+            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} />
         )
     }
     else {
@@ -129,7 +125,7 @@ function MetricsGrid({ loading, setLoading }) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}
-                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={time} hostname={data.pcStatus.hostname} />
+                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} />
 
                 <ChartsView
                     metrics={data.metrics}
