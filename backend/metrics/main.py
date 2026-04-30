@@ -1,17 +1,28 @@
 import psutil
 import platform
+import os
 from datetime import datetime
 
 from fastapi import FastAPI, WebSocket
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from dotenv import load_dotenv
+
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    load_dotenv(_env_path)
+
+allowed_origins = os.getenv("ALLOWED_ORIGINS")
+if allowed_origins: 
+    allowed_origins.split(",")
 app = FastAPI(title="System Manager API")
 
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://192.168.100.140:4173", "http://192.168.100.140:5173", "http://192.168.100.80:8085", "http://localhost:5173", "http://localhost:8085"],
+    allow_origins=allowed_origins if allowed_origins else "",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -98,15 +109,7 @@ def get_status():
     return Status(hostname=hostname, status="Online")
 
 
-ALLOWED_WS_ORIGINS = [
-    "http://192.168.100.140:4173", "http://192.168.100.140:5173", "http://192.168.100.140:8000", "http://192.168.100.80:8085",
-    "http://localhost:5173", "http://localhost:8085", "http://localhost:8000",
-    "ws://192.168.100.140:4173", "ws://192.168.100.140:5173", "ws://192.168.100.140:8000", "ws://192.168.100.80:8085",
-    "ws://localhost:5173", "ws://localhost:8085", "ws://localhost:8000",
-    "wss://192.168.100.140:4173", "wss://192.168.100.140:5173", "wss://192.168.100.140:8000", "wss://192.168.100.80:8085",
-    "wss://localhost:5173", "wss://localhost:8085", "wss://localhost:8000",
-]
-
+ALLOWED_WS_ORIGINS = os.getenv("ALLOWED_WS_ORIGINS").split(",")
 def check_ws_origin(origin):
     print("WS ORIGIN: ", origin)
     if not origin:
@@ -119,20 +122,15 @@ def check_ws_origin(origin):
 async def websocket_status(websocket: WebSocket):
     # Check origin for WebSocket CORS
     origin = websocket.headers.get("origin", "")
-    print("CHECK ORIGIN:", origin)
     if not check_ws_origin(origin):
         await websocket.close(code=403)
         return
     await websocket.accept()
-    await websocket.send_json({"type": "status", "state": "online"})
     try:
         while True:
             await websocket.receive_text()
     except Exception:
         pass
-    finally:
-        await websocket.send_json({"type": "status", "state": "offline"})
-        await websocket.close()
 
 if __name__ == "__main__":
     import uvicorn
