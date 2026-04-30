@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ChartsView from './ChartsView';
 import StatusCard from './StatusCard';
+import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
 const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
 
@@ -16,6 +17,22 @@ function MetricsGrid({ loading, setLoading }) {
     });
 
     const backendRef = useRef(false);
+    const wsRef = useRef({ start: () => {}, stop: () => {} });
+
+    const { start, stop } = useStatusWebSocket(
+        (status) => {
+            setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status } }));
+        },
+        () => {
+            // WebSocket closed - server went offline
+            backendRef.current = false;
+            setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
+        }
+    );
+
+    useEffect(() => {
+        wsRef.current = { start, stop };
+    }, [start, stop]);
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -68,10 +85,14 @@ function MetricsGrid({ loading, setLoading }) {
                 setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 backendRef.current = true;
+                // Server is online - start WebSocket for instant offline detection
+                wsRef.current.start();
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
+                // Server is offline - stop WebSocket
+                wsRef.current.stop();
             }
         };
 
@@ -90,6 +111,7 @@ function MetricsGrid({ loading, setLoading }) {
 
         return () => {
             clearInterval(statusInterval);
+            wsRef.current.stop();
         };
     }, []);
 
