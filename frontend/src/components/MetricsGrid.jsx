@@ -40,7 +40,6 @@ function MetricsGrid({ loading, setLoading }) {
                 const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString(); // time for metrics
-                console.log(timeLabel);
                 setData(prev => {
                     const lastEntry = prev.history[prev.history.length - 1];
                     let rxSpeed = 0;
@@ -144,7 +143,6 @@ function MetricsGrid({ loading, setLoading }) {
         )
     }
     else {
-        console.log(data.history);
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}

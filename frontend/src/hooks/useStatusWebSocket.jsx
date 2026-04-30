@@ -12,7 +12,6 @@ export default function useStatusWebSocket(setStatus, onOffline) {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const baseUrl = WS_API_URL.replace(/^https?:\/\//, ''); // replacing the http in env with ws
         const url = `${protocol}//${baseUrl}/ws/status`;
-        console.log('WebSocket connecting to:', url, 'origin:', window.location.origin);
         const ws = new WebSocket(url);
 
         ws.onopen = () => {
@@ -34,13 +33,11 @@ export default function useStatusWebSocket(setStatus, onOffline) {
             wsRef.current = null;
             // Server went offline - don't auto-reconnect
             // HTTP polling will detect online state and restart WS
-            console.log("SERVER OFFLINE!!!!");
             if (onOffline) onOffline();
         };
 
         ws.onerror = () => {
             ws.close();
-            console.log("WS ERROR");
         };
     }, [setStatus]);
 
