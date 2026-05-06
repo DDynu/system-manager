@@ -103,7 +103,7 @@ def get_metrics():
     )
 
 
-@app.get("/api/status", response_model=Status)
+@app.get("/api/metrics/status", response_model=Status)
 def get_status():
     hostname = platform.node()
     return Status(hostname=hostname, status="Online")
