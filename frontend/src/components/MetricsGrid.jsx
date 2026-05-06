@@ -3,7 +3,7 @@ import ChartsView from './ChartsView';
 import StatusCard from './StatusCard';
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
-const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api`;
+const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api/metrics`;
 
 const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 
@@ -37,7 +37,7 @@ function MetricsGrid({ loading, setLoading }) {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const metricsRes = await fetch(`${METRICS_API_URL}/metrics`);
+                const metricsRes = await fetch(`${METRICS_API_URL}`);
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString(); // time for metrics
                 setData(prev => {
