@@ -1,6 +1,6 @@
 # System Manager
 
-Dashboard for monitoring system metrics and controlling power states.
+Vibecoded dashboard for monitoring system metrics and controlling power states.
 
 ## Features
 
