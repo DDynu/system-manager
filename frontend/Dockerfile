@@ -1,5 +1,5 @@
-# Build stage
-FROM node:26-alpine AS builder
+# Build stage — Debian-based for sharp native modules
+FROM node:26-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install -g pnpm && pnpm install
