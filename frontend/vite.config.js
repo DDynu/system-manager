@@ -20,18 +20,16 @@ export default defineConfig({
                 theme_color: '#1f2937',
                 background_color: '#1f2937',
                 display: 'standalone',
-                icons: [
-                    {
-                        src: 'icons/icon-192.png',
-                        sizes: '192x192',
-                        type: 'image/png',
-                    },
-                    {
-                        src: 'icons/icon-512.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                    },
-                ],
+            },
+            pwaAssets: {
+                disabled: false,
+                config: false,
+                preset: 'minimal-2023',
+                image: 'public/vite-icon.svg',
+                htmlPreset: '2023',
+                includeHtmlHeadLinks: true,
+                overrideManifestIcons: true,
+                injectThemeColor: true,
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,svg,png,webp}'],
