@@ -1,8 +1,8 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN corepack enable && pnpm install
+RUN npm install -g pnpm && pnpm install
 COPY . .
 RUN pnpm build
 
