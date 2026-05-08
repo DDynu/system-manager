@@ -1,8 +1,8 @@
 # Build stage — Debian-based for sharp native modules
 FROM node:26-slim AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm install -g pnpm && pnpm install
+COPY package*.json ./.npmrc ./
+RUN npm install -g pnpm && pnpm install --ignore-scripts
 COPY . .
 RUN pnpm build
 
