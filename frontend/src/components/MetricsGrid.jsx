@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import ChartsView from './ChartsView';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+const ChartsView = lazy(() => import('./ChartsView'));
 import StatusCard from './StatusCard';
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
@@ -148,11 +148,19 @@ function MetricsGrid({ loading, setLoading }) {
                 {/* PC Status Card */}
                 <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time}/>
 
-                <ChartsView
-                    metrics={data.metrics}
-                    memoryTotal={data.memoryTotal}
-                    history={data.history}
-                />
+                <Suspense fallback={
+                    <div className="glass-card rounded-xl p-6 md:h-[374px] lg:h-[389px] animate-pulse">
+                        <div className="h-8 bg-(--border) rounded w-24 mb-2 mx-auto" />
+                        <div className="h-4 bg-(--border) rounded w-20 mb-4 mx-auto" />
+                        <div className="h-[250px] bg-(--border) rounded" />
+                    </div>
+                }>
+                    <ChartsView
+                        metrics={data.metrics}
+                        memoryTotal={data.memoryTotal}
+                        history={data.history}
+                    />
+                </Suspense>
 
             </div>
         );

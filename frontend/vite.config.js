@@ -53,4 +53,26 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
     },
+    build: {
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+            },
+        },
+        rollupOptions: {
+            output: {
+                manualChunks: (id) => {
+                    if (id.includes('react') && !id.includes('react-dom'))
+                        return 'react-vendor'
+                    if (id.includes('react-dom/client'))
+                        return 'react-dom'
+                    if (id.includes('react-dom'))
+                        return 'react-dom-lib'
+                    if (id.includes('recharts'))
+                        return 'recharts'
+                },
+            },
+        },
+    },
 })
