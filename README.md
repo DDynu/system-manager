@@ -90,18 +90,28 @@ it from a different origin, set `VITE_METRICS_API_URL` in `frontend/.env`.
 
 ## Deployment
 
-### Docker
+One container runs both the frontend and the backend:
 
-```bash
-cd frontend
-bash dockerrun.sh
-```
-
-Or build manually:
 ```bash
 docker build -t system-manager .
-docker run -p 5173:80 system-manager
+docker run --name system-manager --restart unless-stopped \
+    -v $PWD/backend/.env:/app/backend/.env \
+    -p 8085:80 system-manager
 ```
+
+Inside, nginx serves the built frontend and proxies `/api` and `/ws` to
+uvicorn on loopback. The backend `.env` (target host, SSH key path) is
+mounted from the host, and the SSH key itself must be readable inside the
+container: either point `SSH_KEY_PATH` at a mounted key, e.g.
+
+```bash
+-v $PWD/backend/.env:/app/backend/.env \
+-v ~/.ssh/id_ed25519:/keys/id_ed25519:ro
+```
+
+with `SSH_KEY_PATH=/keys/id_ed25519`. The container runs as root so it
+can read a standard `0600` key file; put the key on a separate read-only
+volume so it never ends up baked into the image.
 
 ## Plans
 
