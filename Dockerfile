@@ -25,5 +25,5 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # .env is mounted at runtime: -v $PWD/backend/.env:/app/backend/.env
-EXPOSE 80
+EXPOSE 8085
 ENTRYPOINT ["/entrypoint.sh"]

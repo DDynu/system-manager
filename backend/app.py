@@ -11,6 +11,7 @@ if _env_path.exists():
 
 from config import get_allowed_origins, get_allowed_ws_origins
 from metrics import router
+from power import router as power_router
 
 app = FastAPI(title="System Manager API")
 
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(power_router)
 
 WS_ORIGINS = get_allowed_ws_origins()
 

@@ -65,6 +65,13 @@ function MetricsGrid() {
     const [metricsDone, setMetricsDone] = useState(false);
     const loading = !statusDone || !metricsDone;
 
+    // Broadcasts a WOL magic packet for the target via the backend.
+    const handleWake = async () => {
+        const res = await fetch(`${API_BASE}/api/power/wake`, { method: 'POST' });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.detail || `Wake failed (${res.status})`);
+    };
+
     const backendRef = useRef(false);
     const wsRef = useRef({ start: () => {}, stop: () => {} });
 
@@ -177,14 +184,14 @@ function MetricsGrid() {
 
     if (!backendRef.current) {
         return (
-            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time}/>
+            <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time} onWake={handleWake}/>
         )
     }
     else {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
                 {/* PC Status Card */}
-                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time}/>
+                <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time} onWake={handleWake}/>
 
                 <ChartsView
                     metrics={data.metrics}

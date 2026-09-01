@@ -40,6 +40,10 @@ def get_ssh_retries():
         return 1
 
 
+def get_wol_mac():
+    return os.getenv("WOL_MAC_ADDRESS", "").strip()
+
+
 def get_allowed_origins():
     raw = os.getenv("ALLOWED_ORIGINS", "")
     return [origin for origin in raw.split(",") if origin]
