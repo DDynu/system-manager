@@ -6,8 +6,8 @@ from paramiko.ssh_exception import (
 from socket import timeout as SocketTimeout
 
 
-def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=2):
-    """Connect to remote host via SSH with retry logic."""
+def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=1):
+    """Connect to the target host via SSH with retry logic."""
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -15,7 +15,7 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
     for attempt in range(retries + 1):
         try:
             if key_path:
-                key = paramiko.pkey.PKey.from_private_key_file(key_path)
+                key = paramiko.PKey.from_private_key_file(key_path)
                 client.connect(
                     hostname=host,
                     port=port,
@@ -46,7 +46,7 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
         except SocketTimeout as e:
             last_err = e
             continue
-        except AuthenticationException as e:
+        except AuthenticationException:
             raise
         except SSHException as e:
             last_err = e
@@ -55,8 +55,8 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
     raise last_err
 
 
-def execute_command(command, host, port, user, key_path="", password="", timeout=10, retries=2):
-    """Execute a command on remote host via SSH.
+def execute_command(command, host, port, user, key_path="", password="", timeout=10, retries=1):
+    """Execute a command on the target host via SSH.
 
     Returns dict with keys: success, stdout, stderr, exit_code
     """
@@ -64,6 +64,7 @@ def execute_command(command, host, port, user, key_path="", password="", timeout
     try:
         client = connect_ssh(host, port, user, key_path, password, timeout, retries)
         stdin, stdout, stderr = client.exec_command(command)
+        stdout.channel.settimeout(timeout)
         output = stdout.read().decode()
         errput = stderr.read().decode()
         exit_code = stdout.channel.recv_exit_status()
@@ -80,18 +81,11 @@ def execute_command(command, host, port, user, key_path="", password="", timeout
             "stderr": "SSH authentication failed",
             "exit_code": -1,
         }
-    except ConnectionRefusedError as e:
+    except (ConnectionRefusedError, OSError) as e:
         return {
             "success": False,
             "stdout": "",
             "stderr": f"SSH connection failed: {e}",
-            "exit_code": -1,
-        }
-    except SocketTimeout as e:
-        return {
-            "success": False,
-            "stdout": "",
-            "stderr": f"SSH connection timed out: {e}",
             "exit_code": -1,
         }
     except Exception as e:

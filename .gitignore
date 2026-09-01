@@ -9,8 +9,6 @@ backend/__pycache__/
 backend/**/*.pyc
 backend/.env
 frontend/.env
-backend/power/.env
-backend/metrics/.env
 
 # IDE
 .idea/

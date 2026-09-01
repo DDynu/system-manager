@@ -16,7 +16,7 @@ export default defineConfig({
             manifest: {
                 name: 'System Manager',
                 short_name: 'SysMgr',
-                description: 'Monitor system metrics and control power states remotely',
+                description: 'Monitor system metrics remotely',
                 theme_color: '#1f2937',
                 background_color: '#1f2937',
                 display: 'standalone',
@@ -33,20 +33,6 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,svg,png,webp}'],
-                runtimeCaching: [
-                    {
-                        urlPattern: /^https?:.*\/api\//i,
-                        handler: 'NetworkFirst',
-                        options: {
-                            cacheName: 'api-cache',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60,
-                            },
-                            networkTimeoutSeconds: 3,
-                        },
-                    },
-                ],
             },
         }),
     ],

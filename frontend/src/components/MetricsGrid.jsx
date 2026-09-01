@@ -3,11 +3,14 @@ const ChartsView = lazy(() => import('./ChartsView'));
 import StatusCard from './StatusCard';
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
-const METRICS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}/api/metrics`;
+// Falls back to same-origin when VITE_METRICS_API_URL is unset,
+// which is the default deployment (frontend and API on one server).
+const API_BASE = import.meta.env.VITE_METRICS_API_URL || window.location.origin;
+const METRICS_API_URL = `${API_BASE}/api/metrics`;
 
 const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 
-function MetricsGrid({ loading, setLoading }) {
+function MetricsGrid() {
     const [data, setData] = useState({
         metrics: null,
         history: [],
@@ -80,7 +83,6 @@ function MetricsGrid({ loading, setLoading }) {
                 const statusData = await statusRes.json();
                 const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
                 backendRef.current = true;
-                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 backendRef.current = true;
                 // Server is online - start WebSocket for instant offline detection
@@ -104,8 +106,6 @@ function MetricsGrid({ loading, setLoading }) {
                 await fetchMetrics();
             }
         }, FETCH_API_INTERVAL);
-        setData(prev => ({ ...prev, loading: false }));
-
 
         return () => {
             clearInterval(statusInterval);
@@ -113,30 +113,6 @@ function MetricsGrid({ loading, setLoading }) {
         };
     }, []);
 
-    if (loading) {
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-                {/* PC Status Placeholder */}
-                <div className="glass-card rounded-xl p-6 lg:col-span-3 flex items-center justify-center gap-4 backdrop-blur-md">
-                    <div className="text-center">
-                        <div className="h-8 bg-(--border) rounded mb-2 w-48 mx-auto" />
-                        <div className="h-6 bg-(--border) rounded w-24 mx-auto mb-4" />
-                        <div className="h-4 bg-(--border) rounded w-40 mx-auto mb-2" />
-                        <div className="h-4 bg-(--border) rounded w-28 mx-auto" />
-                    </div>
-                </div>
-
-                {/* Metric Card Placeholders */}
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="glass-card rounded-xl p-6 animate-pulse md:h-[374px] lg:h-[389px] backdrop-blur-md">
-                        <div className="h-8 bg-(--border) rounded w-24 mb-2" />
-                        <div className="h-4 bg-(--border) rounded w-20 mb-4" />
-                        <div className="h-[250px] bg-(--border) rounded" />
-                    </div>
-                ))}
-            </div>
-        );
-    }
     if (!backendRef.current) {
         return (
             <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time}/>

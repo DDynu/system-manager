@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const WS_API_URL = `${import.meta.env.VITE_METRICS_API_URL}`;
+const WS_API_URL = import.meta.env.VITE_METRICS_API_URL || window.location.origin;
 
 export default function useStatusWebSocket(setStatus, onOffline) {
     const wsRef = useRef(null);
