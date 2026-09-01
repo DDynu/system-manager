@@ -18,8 +18,8 @@ RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend/ ./backend/
 
 COPY --from=frontend /build/dist /var/www/html
-COPY nginx.conf /etc/nginx/sites-available/default
 RUN rm /etc/nginx/sites-enabled/default
+COPY nginx.conf /etc/nginx/sites-enabled/default
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
