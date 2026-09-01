@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-const ChartsView = lazy(() => import('./ChartsView'));
+import { useState, useEffect, useRef } from 'react';
+import ChartsView from './ChartsView';
 import StatusCard from './StatusCard';
-
-const GpuCards = lazy(() => import('./GpuCards'));
+import GpuCards from './GpuCards';
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
 // Falls back to same-origin when VITE_METRICS_API_URL is unset,
@@ -11,6 +10,21 @@ const API_BASE = import.meta.env.VITE_METRICS_API_URL || window.location.origin;
 const METRICS_API_URL = `${API_BASE}/api/metrics`;
 
 const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
+
+function StatusSkeleton() {
+    return (
+        <div className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md animate-pulse">
+            <div className="flex items-center gap-4">
+                <div className="w-3 h-3 rounded-full bg-(--border)" />
+                <div>
+                    <div className="h-6 bg-(--border) rounded w-40 mb-2" />
+                    <div className="h-4 bg-(--border) rounded w-52" />
+                </div>
+            </div>
+            <div className="h-4 bg-(--border) rounded w-16" />
+        </div>
+    );
+}
 
 function SkeletonCard() {
     return (
@@ -25,7 +39,7 @@ function SkeletonCard() {
 function SkeletonGrid() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-            <SkeletonCard />
+            <StatusSkeleton />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
@@ -44,7 +58,12 @@ function MetricsGrid() {
         pcStatus: { hostname: '', status: 'Offline' },
         currentTime: new Date().toLocaleTimeString()
     });
-    const [loading, setLoading] = useState(true);
+    // The grid swaps from skeletons to real cards once both the first
+    // status and the first metrics response have arrived, so everything
+    // appears in a single transition instead of cards popping in one by one.
+    const [statusDone, setStatusDone] = useState(false);
+    const [metricsDone, setMetricsDone] = useState(false);
+    const loading = !statusDone || !metricsDone;
 
     const backendRef = useRef(false);
     const wsRef = useRef({ start: () => {}, stop: () => {} });
@@ -102,6 +121,8 @@ function MetricsGrid() {
                 console.error('Failed to fetch metrics:', err);
                 backendRef.current = false;
                 fetchStatus(); // fetch to change offline status
+            } finally {
+                setMetricsDone(true);
             }
         };
 
@@ -111,7 +132,6 @@ function MetricsGrid() {
                 const statusData = await statusRes.json();
                 const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
                 backendRef.current = true;
-                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 backendRef.current = true;
                 // Server is online - start WebSocket for instant offline detection
@@ -119,12 +139,19 @@ function MetricsGrid() {
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
                 // Server is offline - stop WebSocket
                 wsRef.current.stop();
+            } finally {
+                setStatusDone(true);
             }
         };
+
+        // Safety net: never hold the skeleton if a request hangs.
+        const loadingTimeout = setTimeout(() => {
+            setStatusDone(true);
+            setMetricsDone(true);
+        }, 15000);
 
         fetchStatus();
         fetchMetrics();
@@ -138,6 +165,7 @@ function MetricsGrid() {
         }, FETCH_API_INTERVAL);
 
         return () => {
+            clearTimeout(loadingTimeout);
             clearInterval(statusInterval);
             wsRef.current.stop();
         };
@@ -158,24 +186,16 @@ function MetricsGrid() {
                 {/* PC Status Card */}
                 <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time}/>
 
-                <Suspense fallback={
-                    <div className="glass-card rounded-xl p-6 md:h-[374px] lg:h-[389px] animate-pulse">
-                        <div className="h-8 bg-(--border) rounded w-24 mb-2 mx-auto" />
-                        <div className="h-4 bg-(--border) rounded w-20 mb-4 mx-auto" />
-                        <div className="h-[250px] bg-(--border) rounded" />
-                    </div>
-                }>
-                    <ChartsView
-                        metrics={data.metrics}
-                        memoryTotal={data.memoryTotal}
-                        history={data.history}
-                    />
-                    <GpuCards
-                        gpus={data.metrics?.gpu}
-                        gpuError={data.metrics?.gpu_error}
-                        history={data.history}
-                    />
-                </Suspense>
+                <ChartsView
+                    metrics={data.metrics}
+                    memoryTotal={data.memoryTotal}
+                    history={data.history}
+                />
+                <GpuCards
+                    gpus={data.metrics?.gpu}
+                    gpuError={data.metrics?.gpu_error}
+                    history={data.history}
+                />
             </div>
         );
     }
