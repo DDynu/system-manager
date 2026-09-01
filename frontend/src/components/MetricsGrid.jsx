@@ -68,6 +68,7 @@ function MetricsGrid() {
                             tx: metricsData.network.tx,
                             rxSpeed,
                             txSpeed,
+                            gpuUtils: metricsData.gpu?.map(g => g.utilization) ?? [],
                         }].slice(-5),
                     }
                 });
