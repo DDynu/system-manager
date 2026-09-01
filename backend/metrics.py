@@ -3,6 +3,10 @@
 The target machine runs a POSIX shell script that reads /proc directly.
 Nothing needs to be installed there: no Python, no psutil. Just sshd
 and key auth for the server.
+
+GPU metrics are optional: if the target has nvtop and jq, the script
+adds per-GPU lines (nvtop -s is a JSON snapshot mode); otherwise it
+reports a gpu_error message and the frontend skips GPU cards.
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -37,6 +41,16 @@ awk 'NR>2 {split($1,f,":"); if (f[1]=="lo") next; rx+=$2; tx+=$10}
      END{printf "net_rx %d\n", rx; printf "net_tx %d\n", tx}' /proc/net/dev
 awk '{s=int($1);
      printf "uptime %dd %dh %dm\n", int(s/86400), int(s%86400/3600), int(s%3600/60)}' /proc/uptime
+if command -v nvtop > /dev/null 2>&1 && command -v jq > /dev/null 2>&1; then
+    nvtop -s 2>/dev/null | jq -r \
+        '.[] | [.device_name, .gpu_util, .mem_used, .mem_total, .temp, .power_draw] | @tsv' 2>/dev/null |
+    while IFS=$(printf '\t') read -r name util mu mt temp pw; do
+        [ -n "$name" ] || continue
+        printf 'gpu %s|%s|%s|%s|%s|%s\n' "$name" "$util" "$mu" "$mt" "$temp" "$pw"
+    done
+else
+    echo "gpu_error nvtop or jq is not installed on the target"
+fi
 echo "hostname $(cat /proc/sys/kernel/hostname)"
 """
 
@@ -59,6 +73,17 @@ class Metrics(BaseModel):
     memory: Memory
     uptime: str
     network: Network
+    gpu: list[Gpu] = []
+    gpu_error: str | None = None
+
+
+class Gpu(BaseModel):
+    name: str
+    utilization: int | None   # %
+    mem_used: float | None    # GB
+    mem_total: float | None   # GB
+    temperature: int | None   # C
+    power: float | None       # W
 
 
 class Status(BaseModel):
@@ -82,6 +107,46 @@ def _run_on_target(command):
         detail = result["stderr"].strip() or f"exit code {result['exit_code']}"
         raise HTTPException(status_code=503, detail=f"Target unreachable: {detail}")
     return result["stdout"]
+
+
+def _int(value, suffix=""):
+    try:
+        return int(value.strip().removesuffix(suffix))
+    except ValueError:
+        return None
+
+
+def _float(value, suffix=""):
+    try:
+        return float(value.strip().removesuffix(suffix))
+    except ValueError:
+        return None
+
+
+def _gb(bytes_value):
+    """nvtop reports memory in raw bytes."""
+    b = _int(bytes_value)
+    return round(b / 1073741824, 1) if b is not None else None
+
+
+def parse_gpus(output: str) -> list[Gpu]:
+    gpus = []
+    for line in output.splitlines():
+        if not line.startswith("gpu "):
+            continue
+        fields = line[4:].split("|")
+        if len(fields) != 6:
+            continue
+        name, util, mu, mt, temp, power = fields
+        gpus.append(Gpu(
+            name=name,
+            utilization=_int(util, "%"),
+            mem_used=_gb(mu),
+            mem_total=_gb(mt),
+            temperature=_int(temp, "C"),
+            power=_float(power, "W"),
+        ))
+    return gpus
 
 
 def parse_metrics(output: str) -> Metrics:
@@ -108,6 +173,8 @@ def parse_metrics(output: str) -> Metrics:
             ),
             uptime=values["uptime"],
             network=Network(rx=int(values["net_rx"]), tx=int(values["net_tx"])),
+            gpu=parse_gpus(output),
+            gpu_error=values.get("gpu_error"),
         )
     except ValueError as e:
         raise HTTPException(status_code=502, detail=f"Malformed metrics from target: {e}")

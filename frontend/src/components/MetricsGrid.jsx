@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 const ChartsView = lazy(() => import('./ChartsView'));
+import GpuCards from './GpuCards';
 import StatusCard from './StatusCard';
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
@@ -138,6 +139,7 @@ function MetricsGrid() {
                     />
                 </Suspense>
 
+                <GpuCards gpus={data.metrics?.gpu} gpuError={data.metrics?.gpu_error} />
             </div>
         );
     }

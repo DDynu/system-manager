@@ -5,6 +5,8 @@
 ## Features
 
 - Real-time system metrics (CPU, memory, network, uptime, hostname)
+- GPU metrics via `nvtop -s` when the target has nvtop + jq (NVIDIA and AMD)
+  installed; otherwise the dashboard shows a notice and skips GPU cards
 - Single-server deployment: the dashboard server SSHes into the target
 - Nothing to install on the target: no agent, no Python, no psutil
 - Progressive Web App — install as standalone app on desktop/mobile
