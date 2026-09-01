@@ -38,6 +38,11 @@ export default defineConfig({
     ],
     server: {
         host: '0.0.0.0',
+        // Dev same-origin proxy, mirrors the nginx /api + /ws setup
+        proxy: {
+            '/api': 'http://localhost:8000',
+            '/ws': { target: 'http://localhost:8000', ws: true },
+        },
     },
     build: {
         minify: 'terser',
