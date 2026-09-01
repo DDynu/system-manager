@@ -15,12 +15,11 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
     for attempt in range(retries + 1):
         try:
             if key_path:
-                key = paramiko.PKey.from_private_key_file(key_path)
+                client.load_key(key_path)
                 client.connect(
                     hostname=host,
                     port=port,
                     username=user,
-                    pkey=key,
                     timeout=timeout,
                     allow_agent=False,
                     look_for_keys=False,
