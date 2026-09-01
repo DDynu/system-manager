@@ -5,7 +5,6 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer
 } from 'recharts';
 import formatBytes from '../utils/formatBytes';
@@ -66,35 +65,6 @@ export default function ChartsView({ metrics, memoryTotal, history }) {
                     <Area type="monotone" dataKey="txSpeed" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} strokeWidth={2} name="Upload" />
                 </AreaChart>
             </ChartShell>
-
-            {metrics?.gpu?.length ? (
-                <ChartShell
-                    title="GPU Usage"
-                    subtitle={metrics.gpu.map(g => g.name).join(', ')}
-                >
-                    <AreaChart data={history}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="time" stroke="var(--text)" fontSize={10} />
-                        <YAxis stroke="var(--text)" fontSize={10} domain={[0, 100]} />
-                        <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', border: '2px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }} />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        {metrics.gpu.map((gpu, i) => (
-                            <Area
-                                key={i}
-                                type="monotone"
-                                dataKey={entry => entry.gpuUtils?.[i] ?? null}
-                                name={gpu.name}
-                                stroke={GPU_COLORS[i % GPU_COLORS.length]}
-                                fill={GPU_COLORS[i % GPU_COLORS.length]}
-                                fillOpacity={0.25}
-                                strokeWidth={2}
-                            />
-                        ))}
-                    </AreaChart>
-                </ChartShell>
-            ) : null}
         </>
     );
 }
-
-const GPU_COLORS = ['#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];

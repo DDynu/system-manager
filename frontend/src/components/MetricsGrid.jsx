@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 const ChartsView = lazy(() => import('./ChartsView'));
-import GpuCards from './GpuCards';
 import StatusCard from './StatusCard';
+
+const GpuCards = lazy(() => import('./GpuCards'));
 import useStatusWebSocket from '../hooks/useStatusWebSocket';
 
 // Falls back to same-origin when VITE_METRICS_API_URL is unset,
@@ -138,9 +139,12 @@ function MetricsGrid() {
                         memoryTotal={data.memoryTotal}
                         history={data.history}
                     />
+                    <GpuCards
+                        gpus={data.metrics?.gpu}
+                        gpuError={data.metrics?.gpu_error}
+                        history={data.history}
+                    />
                 </Suspense>
-
-                <GpuCards gpus={data.metrics?.gpu} gpuError={data.metrics?.gpu_error} />
             </div>
         );
     }
