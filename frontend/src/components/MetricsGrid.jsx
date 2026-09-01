@@ -12,6 +12,30 @@ const METRICS_API_URL = `${API_BASE}/api/metrics`;
 
 const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 
+function SkeletonCard() {
+    return (
+        <div className="glass-card rounded-xl p-6 backdrop-blur-md animate-pulse">
+            <div className="h-8 bg-(--border) rounded w-24 mb-2 mx-auto" />
+            <div className="h-4 bg-(--border) rounded w-20 mb-4 mx-auto" />
+            <div className="h-[250px] bg-(--border) rounded" />
+        </div>
+    );
+}
+
+function SkeletonGrid() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+        </div>
+    );
+}
+
 function MetricsGrid() {
     const [data, setData] = useState({
         metrics: null,
@@ -20,6 +44,7 @@ function MetricsGrid() {
         pcStatus: { hostname: '', status: 'Offline' },
         currentTime: new Date().toLocaleTimeString()
     });
+    const [loading, setLoading] = useState(true);
 
     const backendRef = useRef(false);
     const wsRef = useRef({ start: () => {}, stop: () => {} });
@@ -86,6 +111,7 @@ function MetricsGrid() {
                 const statusData = await statusRes.json();
                 const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
                 backendRef.current = true;
+                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 backendRef.current = true;
                 // Server is online - start WebSocket for instant offline detection
@@ -93,6 +119,7 @@ function MetricsGrid() {
             } catch (err) {
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
+                setLoading(false);
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
                 // Server is offline - stop WebSocket
                 wsRef.current.stop();
@@ -115,6 +142,10 @@ function MetricsGrid() {
             wsRef.current.stop();
         };
     }, []);
+
+    if (loading) {
+        return <SkeletonGrid />;
+    }
 
     if (!backendRef.current) {
         return (
