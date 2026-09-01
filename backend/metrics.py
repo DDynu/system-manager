@@ -68,15 +68,6 @@ class Network(BaseModel):
     tx: int
 
 
-class Metrics(BaseModel):
-    cpu: int
-    memory: Memory
-    uptime: str
-    network: Network
-    gpu: list[Gpu] = []
-    gpu_error: str | None = None
-
-
 class Gpu(BaseModel):
     name: str
     utilization: int | None   # %
@@ -84,6 +75,15 @@ class Gpu(BaseModel):
     mem_total: float | None   # GB
     temperature: int | None   # C
     power: float | None       # W
+
+
+class Metrics(BaseModel):
+    cpu: int
+    memory: Memory
+    uptime: str
+    network: Network
+    gpu: list[Gpu] = []
+    gpu_error: str | None = None
 
 
 class Status(BaseModel):
