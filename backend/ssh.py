@@ -6,6 +6,20 @@ from paramiko.ssh_exception import (
 from socket import timeout as SocketTimeout
 
 
+def load_pkey(path, password=""):
+    """Load a private key file, trying each key type. Works across paramiko
+    versions, where PKey.from_private_key_file is broken/removed."""
+    key_classes = [paramiko.Ed25519Key, paramiko.ECDSAKey, paramiko.RSAKey]
+    if hasattr(paramiko, "DSSKey"):
+        key_classes.append(paramiko.DSSKey)
+    for cls in key_classes:
+        try:
+            return cls.from_private_key_file(path, password=password)
+        except Exception:
+            continue
+    raise SSHException(f"Could not load private key file: {path}")
+
+
 def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=1):
     """Connect to the target host via SSH with retry logic."""
     client = paramiko.SSHClient()
@@ -15,11 +29,12 @@ def connect_ssh(host, port, user, key_path="", password="", timeout=10, retries=
     for attempt in range(retries + 1):
         try:
             if key_path:
-                client.load_key(key_path)
+                key = load_pkey(key_path, password)
                 client.connect(
                     hostname=host,
                     port=port,
                     username=user,
+                    pkey=key,
                     timeout=timeout,
                     allow_agent=False,
                     look_for_keys=False,
