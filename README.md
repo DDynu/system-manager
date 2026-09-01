@@ -5,6 +5,7 @@
 ## Features
 
 - Real-time system metrics (CPU, memory, network, uptime, hostname)
+- Wake-on-LAN: a "Wake PC" button broadcasts a magic packet to power on the target
 - GPU metrics via `nvtop -s` when the target has nvtop + jq (NVIDIA and AMD)
   installed; otherwise the dashboard shows a notice and skips GPU cards
 - Single-server deployment: the dashboard server SSHes into the target
@@ -18,15 +19,19 @@
 One server runs everything:
 
 ```
-Browser ──HTTP/WS──▶ Server (port 8000, also serves the frontend)
+Browser ──HTTP/WS──▶ Server (also serves the frontend)
                           │
-                          └──SSH──▶ Target machine (only needs sshd + key auth)
+                          ├──SSH──▶ Target (reads /proc; needs only sshd + key auth)
+                          └──WOL──▶ Target NIC (magic packet, broadcast on the LAN)
 ```
 
 - **Backend** (FastAPI, port 8000): connects to the target over SSH and runs a
   small POSIX shell script that reads `/proc` (cpu, meminfo, net/dev, uptime).
 - **Frontend** (React app, Vite): polls the API every 5s and holds a WebSocket
   for instant offline detection.
+- **Wake-on-LAN**: `POST /api/power/wake` runs `wakeonlan <mac>` on the server,
+  which broadcasts the magic packet on the LAN. It only works if the target's
+  NIC has WOL enabled in its firmware and the server is on the target's LAN.
 
 ## Setup
 
@@ -47,6 +52,7 @@ bash start.sh
 ```ini
 TARGETS=192.168.100.50:22:root
 SSH_KEY_PATH=~/.ssh/id_ed25519
+WOL_MAC_ADDRESS=aa:bb:cc:dd:ee:ff   # MAC of the target's wired NIC; enables the Wake PC button
 ```
 
 ### 3. Key auth on the target
@@ -81,6 +87,7 @@ it from a different origin, set `VITE_METRICS_API_URL` in `frontend/.env`.
 - `GET /api/metrics` - CPU, memory, network counters, uptime (one SSH round trip, ~1s sampling)
 - `GET /api/metrics/status` - target hostname, online/offline
 - `WS /ws/status` - silent keep-alive; socket close means the server died
+- `POST /api/power/wake` - broadcast a WOL magic packet to the target's MAC
 
 ## Tech Stack
 
@@ -96,24 +103,23 @@ One container runs both the frontend and the backend:
 
 ```bash
 docker build -t system-manager .
-docker run --name system-manager --restart unless-stopped \
+docker run --name system-manager --restart unless-stopped --net=host \
     -v $PWD/backend/.env:/app/backend/.env \
-    -p 8085:80 system-manager
+    -v ~/.ssh/id_ed25519:/keys/id_ed25519:ro \
+    system-manager
 ```
+
+The container uses `--net=host` so the WOL magic packet broadcasts on the
+host's LAN and reaches the target. There is no port mapping: nginx listens on
+`8085` directly on the host, so the site is at `http://<server>:8085`.
 
 Inside, nginx serves the built frontend and proxies `/api` and `/ws` to
-uvicorn on loopback. The backend `.env` (target host, SSH key path) is
-mounted from the host, and the SSH key itself must be readable inside the
-container: either point `SSH_KEY_PATH` at a mounted key, e.g.
-
-```bash
--v $PWD/backend/.env:/app/backend/.env \
--v ~/.ssh/id_ed25519:/keys/id_ed25519:ro
-```
-
-with `SSH_KEY_PATH=/keys/id_ed25519`. The container runs as root so it
-can read a standard `0600` key file; put the key on a separate read-only
-volume so it never ends up baked into the image.
+uvicorn on loopback. The backend `.env` (target host, SSH key path, WOL MAC)
+is mounted from the host, and the SSH key itself must be readable inside the
+container: point `SSH_KEY_PATH` at a mounted key, e.g.
+`-v ~/.ssh/id_ed25519:/keys/id_ed25519:ro` with `SSH_KEY_PATH=/keys/id_ed25519`.
+The container runs as root so it can read a standard `0600` key file; put the
+key on a separate read-only volume so it never ends up baked into the image.
 
 ## Plans
 
