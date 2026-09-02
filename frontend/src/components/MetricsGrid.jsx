@@ -193,7 +193,7 @@ function MetricsGrid() {
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
             }
-        }, 1000);
+        }, 500);
 
         return () => {
             clearTimeout(loadingTimeout);
