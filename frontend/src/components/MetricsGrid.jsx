@@ -11,6 +11,12 @@ const METRICS_API_URL = `${API_BASE}/api/metrics`;
 
 const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 
+// Status is polled every 2s for prompt offline detection. The expensive
+// metrics fetch stays on the slower interval above. If no successful status
+// arrives within OFFLINE_AFTER_MS, the target is declared offline.
+const STATUS_POLL_MS = 2000;
+const OFFLINE_AFTER_MS = 5000;
+
 function StatusSkeleton() {
     return (
         <div className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md animate-pulse">
@@ -73,6 +79,7 @@ function MetricsGrid() {
     };
 
     const backendRef = useRef(false);
+    const lastStatusAtRef = useRef(0);
     const wsRef = useRef({ start: () => {}, stop: () => {} });
 
     const { start, stop } = useStatusWebSocket(
@@ -127,7 +134,6 @@ function MetricsGrid() {
             } catch (err) {
                 console.error('Failed to fetch metrics:', err);
                 backendRef.current = false;
-                fetchStatus(); // fetch to change offline status
             } finally {
                 setMetricsDone(true);
             }
@@ -138,16 +144,17 @@ function MetricsGrid() {
                 const statusRes = await fetch(`${METRICS_API_URL}/status`);
                 const statusData = await statusRes.json();
                 const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
+                lastStatusAtRef.current = Date.now();
                 backendRef.current = true;
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
-                backendRef.current = true;
                 // Server is online - start WebSocket for instant offline detection
                 wsRef.current.start();
             } catch (err) {
+                // Don't flip offline here. The staleness timer below declares
+                // offline after OFFLINE_AFTER_MS with no successful update, so
+                // a slow or hanging poll can't delay the offline state.
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
-                // Server is offline - stop WebSocket
                 wsRef.current.stop();
             } finally {
                 setStatusDone(true);
@@ -163,17 +170,31 @@ function MetricsGrid() {
         fetchStatus();
         fetchMetrics();
 
-        // const metricsInterval = setInterval(fetchMetrics, 1000);
-        const statusInterval = setInterval(async () => {
-            await fetchStatus();
+        // Status polls fast for prompt offline detection; metrics stays on the
+        // slower cadence (the SSH /proc sampling is the expensive part).
+        const statusInterval = setInterval(fetchStatus, STATUS_POLL_MS);
+        const metricsInterval = setInterval(async () => {
             if (backendRef.current) {
                 await fetchMetrics();
             }
         }, FETCH_API_INTERVAL);
 
+        // Declare offline OFFLINE_AFTER_MS after the last successful status,
+        // independent of how long the failed poll takes to return.
+        const stalenessInterval = setInterval(() => {
+            const last = lastStatusAtRef.current;
+            if (last > 0 && Date.now() - last > OFFLINE_AFTER_MS && backendRef.current) {
+                backendRef.current = false;
+                setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
+                wsRef.current.stop();
+            }
+        }, 1000);
+
         return () => {
             clearTimeout(loadingTimeout);
             clearInterval(statusInterval);
+            clearInterval(metricsInterval);
+            clearInterval(stalenessInterval);
             wsRef.current.stop();
         };
     }, []);
@@ -182,7 +203,7 @@ function MetricsGrid() {
         return <SkeletonGrid />;
     }
 
-    if (!backendRef.current) {
+    if (data.pcStatus.status === 'Offline') {
         return (
             <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time} onWake={handleWake}/>
         )
