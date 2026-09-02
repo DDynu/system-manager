@@ -80,6 +80,9 @@ function MetricsGrid() {
 
     const backendRef = useRef(false);
     const lastStatusAtRef = useRef(0);
+    // Guards the staleness timer against redundant updates. Reset on each
+    // successful status, set once we've flipped offline via staleness.
+    const wasStaleOfflineRef = useRef(false);
     const wsRef = useRef({ start: () => {}, stop: () => {} });
 
     const { start, stop } = useStatusWebSocket(
@@ -145,6 +148,7 @@ function MetricsGrid() {
                 const statusData = await statusRes.json();
                 const timeLabel = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}); // Time for status
                 lastStatusAtRef.current = Date.now();
+                wasStaleOfflineRef.current = false;
                 backendRef.current = true;
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 // Server is online - start WebSocket for instant offline detection
@@ -184,7 +188,8 @@ function MetricsGrid() {
         // independent of how long the failed poll takes to return.
         const stalenessInterval = setInterval(() => {
             const last = lastStatusAtRef.current;
-            if (last > 0 && Date.now() - last > OFFLINE_AFTER_MS && backendRef.current) {
+            if (last > 0 && Date.now() - last > OFFLINE_AFTER_MS && !wasStaleOfflineRef.current) {
+                wasStaleOfflineRef.current = true;
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
             }
