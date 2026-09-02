@@ -150,12 +150,13 @@ function MetricsGrid() {
                 // Server is online - start WebSocket for instant offline detection
                 wsRef.current.start();
             } catch (err) {
-                // Don't flip offline here. The staleness timer below declares
-                // offline after OFFLINE_AFTER_MS with no successful update, so
-                // a slow or hanging poll can't delay the offline state.
+                // Don't flip offline here and don't close the WebSocket. The
+                // socket is a server-liveness signal, and the target can be
+                // down while the server is up. The staleness timer below
+                // declares offline after OFFLINE_AFTER_MS with no successful
+                // update, so a slow or hanging poll can't delay it.
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-                wsRef.current.stop();
             } finally {
                 setStatusDone(true);
             }
@@ -186,7 +187,6 @@ function MetricsGrid() {
             if (last > 0 && Date.now() - last > OFFLINE_AFTER_MS && backendRef.current) {
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
-                wsRef.current.stop();
             }
         }, 1000);
 

@@ -5,6 +5,7 @@ const WS_API_URL = import.meta.env.VITE_METRICS_API_URL || window.location.origi
 export default function useStatusWebSocket(setStatus, onOffline) {
     const wsRef = useRef(null);
     const isOnlineRef = useRef(false);
+    const closedByUsRef = useRef(false);
 
     const connect = useCallback(() => {
         if (wsRef.current || !isOnlineRef.current) return;
@@ -15,6 +16,7 @@ export default function useStatusWebSocket(setStatus, onOffline) {
         const ws = new WebSocket(url);
 
         ws.onopen = () => {
+            closedByUsRef.current = false;
             wsRef.current = ws;
         };
 
@@ -31,9 +33,10 @@ export default function useStatusWebSocket(setStatus, onOffline) {
 
         ws.onclose = () => {
             wsRef.current = null;
-            // Server went offline - don't auto-reconnect
-            // HTTP polling will detect online state and restart WS
-            if (onOffline) onOffline();
+            // A close we initiated (unmount) is not a server-death signal.
+            // Only an unexpected close means the server went offline. HTTP
+            // polling detects the online state again and restarts the socket.
+            if (!closedByUsRef.current && onOffline) onOffline();
         };
 
         ws.onerror = () => {
@@ -49,6 +52,7 @@ export default function useStatusWebSocket(setStatus, onOffline) {
     const stop = useCallback(() => {
         isOnlineRef.current = false;
         if (wsRef.current) {
+            closedByUsRef.current = true;
             wsRef.current.close();
             wsRef.current = null;
         }
