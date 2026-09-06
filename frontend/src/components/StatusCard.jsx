@@ -21,22 +21,23 @@ export default function StatusCard({status, uptime, hostname, time, onWake}) {
 
     return (
         <div
-            className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md"
+            className="glass-card rounded-xl p-4 lg:col-span-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 backdrop-blur-md"
         >
-            <div className="flex items-center gap-4">
-                <span className={`status-dot ${status === 'Online' ? 'online' : status === 'Offline' ? 'offline' : 'pending'}`} />
-                <div>
-                    <div className="text-xl font-bold text-[var(--text-h)]" style={{ fontFamily: "'Zen Dots', cursive" }}>
+            <div className="min-w-0">
+                {/* Dot sits on the hostname line so it doesn't look
+                    stranded between the two text lines on narrow screens. */}
+                <div className="flex items-center gap-2 min-w-0">
+                    <span className={`status-dot ${status === 'Online' ? 'online' : status === 'Offline' ? 'offline' : 'pending'}`} />
+                    <div className="text-xl font-bold text-[var(--text-h)] truncate" style={{ fontFamily: "'Zen Dots', cursive" }}>
                         {hostname || 'Unknown'}
                     </div>
+                </div>
 
-                    <div className="text-sm text-[var(--text)]">
-                        {status} {status === 'Online' && `· Uptime: ${uptime || 'Unknown'}`}
-                    </div>
-
+                <div className="text-sm text-[var(--text)] truncate">
+                    {status} {status === 'Online' && `· Uptime: ${uptime || 'Unknown'}`}
                 </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                 {onWake && (
                     <button
                         onClick={handleWake}
@@ -47,7 +48,7 @@ export default function StatusCard({status, uptime, hostname, time, onWake}) {
                     </button>
                 )}
                 {wakeMsg && <span className="text-xs text-[var(--text)]">{wakeMsg}</span>}
-                <div className="text-sm text-[var(--text)] tabular-nums">
+                <div className="text-sm text-[var(--text)] tabular-nums whitespace-nowrap">
                     {time}
                 </div>
             </div>
