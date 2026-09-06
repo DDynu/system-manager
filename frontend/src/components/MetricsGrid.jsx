@@ -17,21 +17,6 @@ const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 const STATUS_POLL_MS = 2000;
 const OFFLINE_AFTER_MS = 5000;
 
-function StatusSkeleton() {
-    return (
-        <div className="glass-card rounded-xl p-4 lg:col-span-3 flex items-center justify-between backdrop-blur-md animate-pulse">
-            <div className="flex items-center gap-4">
-                <div className="w-3 h-3 rounded-full bg-(--border)" />
-                <div>
-                    <div className="h-6 bg-(--border) rounded w-40 mb-2" />
-                    <div className="h-4 bg-(--border) rounded w-52" />
-                </div>
-            </div>
-            <div className="h-4 bg-(--border) rounded w-16" />
-        </div>
-    );
-}
-
 function SkeletonCard() {
     return (
         <div className="glass-card rounded-xl p-6 backdrop-blur-md animate-pulse">
@@ -44,15 +29,14 @@ function SkeletonCard() {
 
 function SkeletonGrid() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-            <StatusSkeleton />
+        <>
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
-        </div>
+        </>
     );
 }
 
@@ -61,15 +45,13 @@ function MetricsGrid() {
         metrics: null,
         history: [],
         memoryTotal: 0,
-        pcStatus: { hostname: '', status: 'Offline' },
-        currentTime: new Date().toLocaleTimeString()
+        pcStatus: { hostname: '', status: 'Pending' },
+        time: new Date().toLocaleTimeString()
     });
-    // The grid swaps from skeletons to real cards once both the first
-    // status and the first metrics response have arrived, so everything
-    // appears in a single transition instead of cards popping in one by one.
-    const [statusDone, setStatusDone] = useState(false);
+    // The status bar renders immediately as "Pending"; only the metric
+    // cards wait behind skeletons until the first metrics response lands.
     const [metricsDone, setMetricsDone] = useState(false);
-    const loading = !statusDone || !metricsDone;
+    const loading = !metricsDone;
 
     // Broadcasts a WOL magic packet for the target via the backend.
     const handleWake = async () => {
@@ -161,14 +143,16 @@ function MetricsGrid() {
                 // update, so a slow or hanging poll can't delay it.
                 console.error('Failed to fetch status:', err);
                 backendRef.current = false;
-            } finally {
-                setStatusDone(true);
+                // If the first attempt fails, stop showing "Pending" and
+                // fall back to the offline UI (with the Wake button).
+                setData(prev => prev.pcStatus.status === 'Pending'
+                    ? { ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }
+                    : prev);
             }
         };
 
-        // Safety net: never hold the skeleton if a request hangs.
+        // Safety net: never hold the skeletons if a request hangs.
         const loadingTimeout = setTimeout(() => {
-            setStatusDone(true);
             setMetricsDone(true);
         }, 15000);
 
@@ -204,11 +188,7 @@ function MetricsGrid() {
         };
     }, []);
 
-    if (loading) {
-        return <SkeletonGrid />;
-    }
-
-    if (data.pcStatus.status === 'Offline') {
+    if (data.pcStatus.status === 'Offline' && !loading) {
         return (
             <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time} onWake={handleWake}/>
         )
@@ -219,16 +199,21 @@ function MetricsGrid() {
                 {/* PC Status Card */}
                 <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} hostname={data.pcStatus.hostname} time={data.time} onWake={handleWake}/>
 
-                <ChartsView
-                    metrics={data.metrics}
-                    memoryTotal={data.memoryTotal}
-                    history={data.history}
-                />
-                <GpuCards
-                    gpus={data.metrics?.gpu}
-                    gpuError={data.metrics?.gpu_error}
-                    history={data.history}
-                />
+                {loading
+                    ? <SkeletonGrid />
+                    : <>
+                        <ChartsView
+                            metrics={data.metrics}
+                            memoryTotal={data.memoryTotal}
+                            history={data.history}
+                        />
+                        <GpuCards
+                            gpus={data.metrics?.gpu}
+                            gpuError={data.metrics?.gpu_error}
+                            history={data.history}
+                        />
+                    </>
+                }
             </div>
         );
     }
