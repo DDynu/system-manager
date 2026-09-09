@@ -180,10 +180,16 @@ function MetricsGrid() {
         }, FETCH_API_INTERVAL);
 
         // Declare offline OFFLINE_AFTER_MS after the last successful status,
-        // independent of how long the failed poll takes to return.
+        // independent of how long the failed poll takes to return. Before the
+        // first success, mount time is the baseline: with the target down,
+        // the first status poll can hang for SSH_TIMEOUT × retries before
+        // failing, and without this the bar would sit on Pending (orange)
+        // the whole time.
+        const startedAt = Date.now();
         const stalenessInterval = setInterval(() => {
             const last = lastStatusAtRef.current;
-            if (last > 0 && Date.now() - last > OFFLINE_AFTER_MS && !wasStaleOfflineRef.current) {
+            const baseline = last > 0 ? last : startedAt;
+            if (Date.now() - baseline > OFFLINE_AFTER_MS && !wasStaleOfflineRef.current) {
                 wasStaleOfflineRef.current = true;
                 backendRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
