@@ -27,7 +27,7 @@ export default function StatusCard({status, uptime, hostname, time, onWake}) {
                 {/* Dot sits on the hostname line so it doesn't look
                     stranded between the two text lines on narrow screens. */}
                 <div className="flex items-center gap-2 min-w-0">
-                    <span className={`status-dot ${status === 'Online' ? 'online' : status === 'Offline' ? 'offline' : 'pending'}`} />
+                    <span className={`status-dot ${status === 'Online' ? 'online' : status === 'Offline' ? 'offline' : status === 'Waking Up' ? 'waking' : 'pending'}`} />
                     <div className="text-xl font-bold text-[var(--text-h)] truncate" style={{ fontFamily: "'Zen Dots', cursive" }}>
                         {hostname || 'Unknown'}
                     </div>
@@ -38,10 +38,10 @@ export default function StatusCard({status, uptime, hostname, time, onWake}) {
                 </div>
             </div>
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                {onWake && (
+                {onWake && status !== 'Online' && (
                     <button
                         onClick={handleWake}
-                        disabled={waking}
+                        disabled={waking || status === 'Waking Up'}
                         className="text-sm px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--text-h)] transition-colors disabled:opacity-50 whitespace-nowrap"
                     >
                         {waking ? 'Waking…' : '⏻ Wake PC'}

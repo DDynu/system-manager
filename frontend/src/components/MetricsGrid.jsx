@@ -16,6 +16,9 @@ const FETCH_API_INTERVAL = import.meta.env.VITE_FETCH_API_INTERVAL;
 // arrives within OFFLINE_AFTER_MS, the target is declared offline.
 const STATUS_POLL_MS = 2000;
 const OFFLINE_AFTER_MS = 5000;
+// After a successful WOL packet, wait this long for the target to report in.
+// The first SSH connection right after a cold boot is usually the slow part.
+const WAKING_TIMEOUT_MS = 20000;
 
 function SkeletonCard() {
     return (
@@ -53,11 +56,27 @@ function MetricsGrid() {
     const [metricsDone, setMetricsDone] = useState(false);
     const loading = !metricsDone;
 
-    // Broadcasts a WOL magic packet for the target via the backend.
+    // Broadcasts a WOL magic packet for the target via the backend, then
+    // flips the status to "Waking Up". If no status poll succeeds within
+    // WAKING_TIMEOUT_MS it falls back to Offline; a successful poll (Online)
+    // cancels the timer and wins immediately.
+    const wakingTimerRef = useRef(null);
+    const isWakingRef = useRef(false);
     const handleWake = async () => {
         const res = await fetch(`${API_BASE}/api/power/wake`, { method: 'POST' });
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.detail || `Wake failed (${res.status})`);
+        isWakingRef.current = true;
+        setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Waking Up' } }));
+        clearTimeout(wakingTimerRef.current);
+        wakingTimerRef.current = setTimeout(() => {
+            wakingTimerRef.current = null;
+            isWakingRef.current = false;
+            wasStaleOfflineRef.current = false;
+            setData(prev => prev.pcStatus.status === 'Waking Up'
+                ? { ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }
+                : prev);
+        }, WAKING_TIMEOUT_MS);
     };
 
     const backendRef = useRef(false);
@@ -74,6 +93,9 @@ function MetricsGrid() {
         () => {
             // WebSocket closed - server went offline
             backendRef.current = false;
+            clearTimeout(wakingTimerRef.current);
+            wakingTimerRef.current = null;
+            isWakingRef.current = false;
             setData(prev => ({ ...prev, pcStatus: { ...prev.pcStatus, status: 'Offline' } }));
         }
     );
@@ -143,6 +165,9 @@ function MetricsGrid() {
                 lastStatusAtRef.current = Date.now();
                 wasStaleOfflineRef.current = false;
                 backendRef.current = true;
+                clearTimeout(wakingTimerRef.current);
+                wakingTimerRef.current = null;
+                isWakingRef.current = false;
                 setData(prev => ({ ...prev, pcStatus: statusData, time: timeLabel}));
                 // Server is online - start WebSocket for instant offline detection
                 wsRef.current.start();
@@ -187,6 +212,9 @@ function MetricsGrid() {
         // the whole time.
         const startedAt = Date.now();
         const stalenessInterval = setInterval(() => {
+            // While a wake is in flight the 20s timer owns the offline
+            // decision, so the short staleness window must not preempt it.
+            if (isWakingRef.current) return;
             const last = lastStatusAtRef.current;
             const baseline = last > 0 ? last : startedAt;
             if (Date.now() - baseline > OFFLINE_AFTER_MS && !wasStaleOfflineRef.current) {
@@ -198,6 +226,7 @@ function MetricsGrid() {
 
         return () => {
             clearTimeout(loadingTimeout);
+            clearTimeout(wakingTimerRef.current);
             clearInterval(statusInterval);
             clearInterval(metricsInterval);
             clearInterval(stalenessInterval);
@@ -205,7 +234,7 @@ function MetricsGrid() {
         };
     }, []);
 
-    if (data.pcStatus.status === 'Offline' && !loading) {
+    if ((data.pcStatus.status === 'Offline' || data.pcStatus.status === 'Waking Up') && !loading) {
         return (
             <StatusCard status={data.pcStatus.status} uptime={data.metrics?.uptime} time={data.time} onWake={handleWake}/>
         )
