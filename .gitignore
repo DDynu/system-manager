@@ -27,3 +27,6 @@ npm-debug.log*
 #Claude
 .claude
 .openclaude
+
+# Project memory (local only)
+AGENTS.md
