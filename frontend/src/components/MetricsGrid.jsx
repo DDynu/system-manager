@@ -86,6 +86,14 @@ function MetricsGrid() {
         const fetchMetrics = async () => {
             try {
                 const metricsRes = await fetch(`${METRICS_API_URL}`);
+                // Target offline: the backend answers 503 with a {detail} body,
+                // not a metrics object. Don't feed that into state; the status
+                // poll owns offline detection.
+                if (!metricsRes.ok) {
+                    console.error('Metrics fetch failed:', metricsRes.status);
+                    backendRef.current = false;
+                    return;
+                }
                 const metricsData = await metricsRes.json();
                 const timeLabel = new Date().toLocaleTimeString(); // time for metrics
                 setData(prev => {
@@ -95,21 +103,24 @@ function MetricsGrid() {
                     if (lastEntry) {
                         const timeDelta = FETCH_API_INTERVAL/1000;
                         if (timeDelta > 0) {
-                            rxSpeed = (metricsData.network.rx - lastEntry.rx) / timeDelta;
-                            txSpeed = (metricsData.network.tx - lastEntry.tx) / timeDelta;
+                            // Null-safe: an unexpected response shape must
+                            // never throw inside this updater (React runs it
+                            // during render, outside the try/catch above).
+                            rxSpeed = ((metricsData.network?.rx ?? 0) - lastEntry.rx) / timeDelta;
+                            txSpeed = ((metricsData.network?.tx ?? 0) - lastEntry.tx) / timeDelta;
                         }
                     }
 
                     return {
                         ...prev,
                         metrics: metricsData,
-                        memoryTotal: metricsData.memory.total,
+                        memoryTotal: metricsData.memory?.total ?? 0,
                         history: [...prev.history, {
                             time: timeLabel,
                             cpu: metricsData.cpu,
-                            memory: metricsData.memory.used,
-                            rx: metricsData.network.rx,
-                            tx: metricsData.network.tx,
+                            memory: metricsData.memory?.used ?? 0,
+                            rx: metricsData.network?.rx ?? 0,
+                            tx: metricsData.network?.tx ?? 0,
                             rxSpeed,
                             txSpeed,
                             gpuUtils: metricsData.gpu?.map(g => g.utilization) ?? [],
